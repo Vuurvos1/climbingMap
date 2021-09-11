@@ -73,3 +73,9 @@ list of possible filters:
 `baseurl/gyms/:gym id/climbs/:climb id`
 
 climb/route id can be found in the list of climbs of a gym
+
+### Climbs sorted in groups
+
+<!-- https://api.toplogger.nu/v1/groups?json_params=%7B%22filters%22:%7B%22gym_id%22:8,%22score_system%22:%22none%22,%22live%22:true%7D,%22includes%22:[%22climb_groups%22]%7D -->
+
+`baseurl/groups?json_params`

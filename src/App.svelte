@@ -1,7 +1,6 @@
 <script>
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
-  import { zoomIdentity } from 'd3';
 
   const baseUrl = 'https://api.toplogger.nu/v1';
 
@@ -47,13 +46,8 @@
   }
 
   function afterComma(float) {
-    // return float % 1;
-
-    // flaot[0] = '0';
-
-    float = float.replace(/^./g, '0');
-
-    return float;
+    // turn first digit of a number into a 0 (this will break if more than 2 digits before 0)
+    return float.replace(/^./g, '0');
   }
 
   function gradeConverter(val) {
@@ -61,22 +55,111 @@
     const gradeBase = ~~Number(val);
     let gradeMod = afterComma(val);
 
+    // 2+
+    // 2.75
+    if (val < 3) {
+      gradeMod = val;
+    }
+
     // a  a+  b   b+  c   c+
     // .0 .17 .33 .5  .67 .83
     const gradeLookup = {
-      '0.0': 'A',
-      '0.17': 'A+',
-      '0.33': 'B',
-      '0.5': 'B',
-      '0.67': 'C',
-      '0.83': 'C+',
+      '2.75': '+',
+      '0.0': 'a',
+      '0.17': 'a+',
+      '0.33': 'b',
+      '0.5': 'b+',
+      '0.67': 'c',
+      '0.83': 'c+',
     };
 
-    return `${gradeBase}${gradeLookup[gradeMod]}`;
+    const modifier = gradeLookup[gradeMod] ? gradeLookup[gradeMod] : '';
+
+    return `${gradeBase}${modifier}`;
   }
 
-  function d3ify(climbData) {
-    const dotSize = 12;
+  function gradeColor(grade) {
+    // return a color based on a boulder grade
+    const gradeBase = String(~~Number(grade));
+    // console.log(gradeBase);
+
+    /*
+    2/3a
+    3/4a
+    4c/5a
+    black yellow f9ff00 0c0505
+
+    red ce0000
+    green 0f480c
+    yellow dcd138
+    orange ff7200
+    black 000000
+    pink ff00ed
+    blue 0093ff
+    purple 822fe0
+    lime 05ff00
+    white
+    
+    */
+
+    const gradeColors = {
+      // '2'
+      // '3a'
+      // ''
+      // '4'
+      // '5'
+      // '6'
+      // '7'
+      // '8'
+      // '9'
+    };
+
+    return gradeColor[gradeBase];
+  }
+
+  function routeColor(climb_id, groups) {
+    // filter groups arr > climb_group > climb_id > if match get name
+    let name = groups.filter((el, i) => {
+      for (const item of el.climb_groups) {
+        if (item.climb_id == climb_id) {
+          return el;
+        } else {
+          false;
+        }
+      }
+    });
+
+    // console.log(name);
+    if (name.length < 1) {
+      name = 'aaa';
+    } else {
+      name = name[0].name;
+    }
+
+    // color lookup table
+    const colors = {
+      red: 'ce0000',
+      green: '0f480c',
+      yellow: 'dcd138',
+      orange: 'ff7200',
+      black: '000000',
+      pink: 'ff00ed',
+      blue: '0093ff',
+      purple: '822fe0',
+      lime: '05ff00',
+      white: 'ffffff',
+    };
+
+    // color fallback if not defined
+    const col = colors[name.toLowerCase()]
+      ? colors[name.toLowerCase()]
+      : '0000ff';
+
+    return col;
+  }
+
+  function d3ify(climbData, groups) {
+    const dotSize = 20;
     // const size = document.querySelector('.svgContainer');
     // const w = size.clientWidth;
     // const h = size.clientHeight;
@@ -97,41 +180,46 @@
       .enter()
       .append('g')
       .attr('transform', (d) => {
-        return `translate(${x(d.position_x)}, ${y(d.position_y)})`;
-      });
+        return `translate(${x(d.position_x)}, ${y(d.position_y)}) scale(${1})`;
+      })
+
+      .on('click', (e, d) => {
+        console.log(d);
+      })
+      .append('g')
+      .attr('class', 'scale');
 
     climbs
       .append('circle')
       .attr('r', dotSize)
-      .style('fill', '#61a3a9')
-      .on('click', (e, d) => {
-        console.log(d);
-      });
+      .style('fill', (d) => `#${routeColor(d.id, groups)}`);
 
     climbs
       .append('text')
-      .attr('dx', function (d) {
-        return -20;
-      })
+      .attr('dy', 5)
       .text((d) => {
         return gradeConverter(d.grade);
-      });
+      })
+      .attr('text-anchor', 'middle');
+    // base text color on background color
 
     const zoom = d3
       .zoom()
       .scaleExtent([0.1, 2.5])
-      .on('zoom', (e) => {
+      .on('zoom', (e, d) => {
         const el = d3.select('g#zoom_layer');
         el.attr('transform', e.transform);
 
-        routes.selectAll('circle').attr('r', dotSize / e.transform.k);
+        // this is probably a bad way of doing this lol
+        routes.selectAll('g.scale').attr('transform', () => {
+          return `scale(${1 / e.transform.k})`;
+        });
       });
 
     svg.call(zoom);
 
     d3.select('g#zoom_layer').on('click', (e, d) => {
-      console.log('clicked a thing');
-
+      // console.log('clicked a thing');
       /*
       e.stopPropagation();
       // const size = document.querySelector('#zoom_layer');
@@ -200,6 +288,32 @@
     }
   }
 
+  async function fetchGroups() {
+    const filters = {
+      filters: {
+        gym_id: 8,
+        deleted: false,
+        live: true,
+        score_system: 'none',
+      },
+      includes: ['climb_groups'],
+    };
+
+    const url = `${baseUrl}/groups?json_params=${encodeURIComponent(
+      JSON.stringify(filters)
+    )}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (res) {
+      climbs = data;
+      return data;
+    } else {
+      throw new Error(data);
+    }
+  }
+
   // https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg
   // https://api.toplogger.nu/v1/gyms/8/climbs?json_params=%7B%22filters%22:%7B%22deleted%22:false,%22live%22:true%7D%7D
 
@@ -208,10 +322,14 @@
 
     const climbs = await fetchData();
     // console.log(climbs);
+    const groups = await fetchGroups();
+    // console.log(climbs, groups);
 
     await fetchSvg();
 
-    d3ify(climbs);
+    // console.log(routeColor(133938, groups));
+
+    d3ify(climbs, groups);
   });
 </script>
 
