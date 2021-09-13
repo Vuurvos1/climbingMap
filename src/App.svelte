@@ -7,44 +7,6 @@
   let climbs = [];
   let svg = '';
 
-  async function fetchData() {
-    const filters = {
-      filters: {
-        deleted: false,
-        live: true,
-      },
-    };
-
-    const url = `${baseUrl}/gyms/8/climbs?json_params=${encodeURIComponent(
-      JSON.stringify(filters)
-    )}`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (res) {
-      climbs = data;
-      return data;
-    } else {
-      throw new Error(data);
-    }
-  }
-
-  async function fetchSvg() {
-    const url =
-      'https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg';
-
-    const res = await fetch(url);
-    const data = await res.text();
-
-    if (res) {
-      svg = data;
-      return data;
-    } else {
-      throw new Error(data);
-    }
-  }
-
   function afterComma(float) {
     // turn first digit of a number into a 0 (this will break if more than 2 digits before 0)
     return float.replace(/^./g, '0');
@@ -357,10 +319,33 @@
     }
   }
 
-  async function fetchGroups() {
+  // https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg
+  // https://api.toplogger.nu/v1/gyms/8/climbs?json_params=%7B%22filters%22:%7B%22deleted%22:false,%22live%22:true%7D%7D
+
+  function svgUrl(gymName) {
+    const url = `https://cdn1.toplogger.nu/images/gyms/${gymName}/floorplan.svg`;
+    return url;
+  }
+
+  function climbsUrl(gymId) {
     const filters = {
       filters: {
-        gym_id: 8,
+        deleted: false,
+        live: true,
+      },
+    };
+
+    const url = `${baseUrl}/gyms/${gymId}/climbs?json_params=${encodeURIComponent(
+      JSON.stringify(filters)
+    )}`;
+
+    return url;
+  }
+
+  function groupsUrl(gymId) {
+    const filters = {
+      filters: {
+        gym_id: gymId,
         deleted: false,
         live: true,
         score_system: 'none',
@@ -372,30 +357,30 @@
       JSON.stringify(filters)
     )}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (res) {
-      climbs = data;
-      return data;
-    } else {
-      throw new Error(data);
-    }
+    return url;
   }
 
-  // https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg
-  // https://api.toplogger.nu/v1/gyms/8/climbs?json_params=%7B%22filters%22:%7B%22deleted%22:false,%22live%22:true%7D%7D
-
   onMount(async () => {
-    // doing this is kinda jucky but it works, having await blocks would be nicer
+    // fetch Svg doesn't work in the promise all :(
+    let climbs, groups;
 
-    const climbs = await fetchData();
-    // console.log(climbs);
-    const groups = await fetchGroups();
-    // console.log(climbs, groups);
+    [climbs, groups, svg] = await Promise.all([
+      fetch(climbsUrl(8)),
+      fetch(groupsUrl(8)),
+      fetch(svgUrl('bruut_boulder_breda')),
+    ])
+      .then((res) => {
+        return Promise.all([res[0].json(), res[1].json(), res[2].text()]);
+      })
+      .then((data) => {
+        svg = data[2];
+        return data;
+      })
+      .catch((err) => {
+        throw new Error(err);
+      });
 
-    await fetchSvg();
-
+    // console.log(climbs, groups, svg);
     // console.log(routeColor(133938, groups));
 
     d3ify(climbs, groups);
@@ -404,13 +389,7 @@
 
 <main>
   <div class="svgContainer">
-    <!-- {#await fetchSvg()}
-      <p>loading svg</p>
-    {:then svg} -->
     {@html svg}
-    <!-- {:catch error}
-      <p style="color: red">{error.message}</p>
-    {/await} -->
   </div>
 
   <!-- {#await fetchData()}
