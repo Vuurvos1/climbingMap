@@ -2,10 +2,14 @@
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
+  import GymSelect from './components/GymSelect.svelte';
+  import RoutePreview from './components/RoutePreview.svelte';
+
   const baseUrl = 'https://api.toplogger.nu/v1';
 
   let climbs = [];
   let svg = '';
+  let climb;
 
   function afterComma(float) {
     // turn first digit of a number into a 0 (this will break if more than 2 digits before 0)
@@ -123,10 +127,11 @@
   function d3ify(climbData, groups) {
     const dotSize = 20;
 
+    // update these on resize.
     const size = document.querySelector('svg.flex');
     const w = size.clientWidth;
     const h = size.clientHeight;
-    const svg = d3.select('svg.flex');
+    const svg = d3.select('svg.flex').attr('width', w).attr('height', h);
 
     // const bbox = svg.select('#zoom_layer').node().getBBox();
     // console.log('bbox', bbox);
@@ -137,6 +142,7 @@
 
     const routes = svg
       .select('#zoom_layer')
+
       .append('g')
       .attr('class', 'routes');
 
@@ -152,7 +158,8 @@
       .attr('class', 'route')
 
       .on('click', (e, d) => {
-        console.log(d);
+        // console.log(d);
+        climb = d;
 
         // zoom in into dot
       })
@@ -173,16 +180,31 @@
       .attr('text-anchor', 'middle');
     // base text color on background color
 
+    //setup zoom and initial zoom
+    const bbox = svg.select('#zoom_layer').node().getBBox();
+
+    // svg.select('#zoom_layer').
+
+    // wrap svg element
+    // d3.selectAll('g#zoom_layer').each(function () {
+    //   var el = this;
+    //   d3.select(el.parentNode)
+    //     .insert('g')
+    //     .attr('class', 'wrapped')
+    //     .append(function () {
+    //       return el;
+    //     });
+    // });
+
     const zoom = d3
       .zoom()
       .scaleExtent([0.1, 2.5])
-      .translateExtent([
-        [-6000, -5000],
-        [5000, 6000],
-      ]) // change these values to be more dynamic
+      // .translateExtent([
+      //   [-6000, -5000],
+      //   [5000, 6000],
+      // ]) // change these values to be more dynamic
       .on('zoom', (e, d) => {
-        const el = d3.select('g#zoom_layer');
-        el.attr('transform', e.transform);
+        d3.select('g#zoom_layer').attr('transform', e.transform);
 
         // this is probably a bad way of doing this lol
         routes.selectAll('g.scale').attr('transform', () => {
@@ -190,17 +212,21 @@
         });
       });
 
-    //setup zoom and initial zoom
-    const bbox = svg.select('#zoom_layer').node().getBBox();
     svg
       .call(zoom)
       .call(
         zoom.transform,
-        d3.zoomIdentity.translate(-bbox.x, -bbox.y).scale(1)
+        d3.zoomIdentity
+          .translate(bbox.x + w / 2 - 200, bbox.y - h - 250)
+          .scale(h / bbox.height - (h / bbox.height) * 0.1)
       );
 
+    console.log(bbox);
     svg.select('#zoom_layer').attr('transform', () => {
-      return `translate(${-bbox.x}, ${-bbox.y}) scale(1)`;
+      const scale = bbox.height / h;
+      return `translate(${bbox.x + w / 2 - 200}, ${bbox.y - h - 250}) scale(${
+        h / bbox.height - (h / bbox.height) * 0.1
+      })`;
     });
 
     d3.select('g#zoom_layer').on('click', (e, d) => {
@@ -407,6 +433,9 @@
   <!-- {:catch error}
     <p style="color: red">{error.message}</p>
   {/await} -->
+
+  <GymSelect />
+  <RoutePreview data={climb} />
 </main>
 
 <style>
