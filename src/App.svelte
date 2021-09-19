@@ -4,11 +4,12 @@
 
   import GymSelect from './components/GymSelect.svelte';
   import RoutePreview from './components/RoutePreview.svelte';
+  import fetchGymData from './modules/fetchGymData';
 
   const baseUrl = 'https://api.toplogger.nu/v1';
 
   let climbs = [];
-  let svg = '';
+  let gymSvg = '';
   let climb;
 
   function afterComma(float) {
@@ -146,6 +147,8 @@
       .append('g')
       .attr('class', 'routes');
 
+    console.log(svg, routes);
+
     // scale this based on zoom instead of dots
     climbs = routes
       .selectAll('g')
@@ -205,6 +208,7 @@
       // ]) // change these values to be more dynamic
       .on('zoom', (e, d) => {
         d3.select('g#zoom_layer').attr('transform', e.transform);
+        console.log('zoom');
 
         // this is probably a bad way of doing this lol
         routes.selectAll('g.scale').attr('transform', () => {
@@ -314,6 +318,8 @@
       */
     });
 
+    console.log('rerun d3');
+
     // svg.call(
     //   zoom.transform,
     //   zoomIdentity
@@ -387,10 +393,9 @@
   }
 
   onMount(async () => {
-    // fetch Svg doesn't work in the promise all :(
     let climbs, groups;
 
-    [climbs, groups, svg] = await Promise.all([
+    [climbs, groups, gymSvg] = await Promise.all([
       fetch(climbsUrl(8)),
       fetch(groupsUrl(8)),
       fetch(svgUrl('bruut_boulder_breda')),
@@ -399,7 +404,7 @@
         return Promise.all([res[0].json(), res[1].json(), res[2].text()]);
       })
       .then((data) => {
-        svg = data[2];
+        gymSvg = data[2];
         return data;
       })
       .catch((err) => {
@@ -415,26 +420,18 @@
 
 <main>
   <div class="svgContainer">
-    {@html svg}
+    {@html gymSvg}
   </div>
 
-  <!-- {#await fetchData()}
-    <p>fetching data</p>
-  {:then items} -->
-  <ul>
-    <!-- {#each climbs as climb}
-      <li>
-        <pre>
-						{JSON.stringify(climb, null, 2)}
-					</pre>
-      </li>
-    {/each} -->
-  </ul>
-  <!-- {:catch error}
-    <p style="color: red">{error.message}</p>
-  {/await} -->
+  <GymSelect
+    on:change={async (e) => {
+      // console.log(e.detail);
+      const data = await fetchGymData(e.detail.id, e.detail.id_name);
+      gymSvg = await data.svg;
 
-  <GymSelect />
+      d3ify(data.climbs, data.groups);
+    }}
+  />
   <RoutePreview data={climb} />
 </main>
 

@@ -1,8 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
 
   let gyms = [];
   let selected;
+
+  const dispatch = createEventDispatcher();
 
   onMount(async () => {
     const data = await fetch('https://api.toplogger.nu/v1/gyms/');
@@ -21,6 +23,7 @@
     on:change={() => {
       // update data
       console.log(selected);
+      dispatch('change', selected);
     }}
   >
     {#each gyms as gym}
