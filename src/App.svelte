@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  // import { gyms } from './store';
   import * as d3 from 'd3';
 
   import GymSelect from './components/GymSelect.svelte';
@@ -11,6 +12,20 @@
   let climbs = [];
   let gymSvg = '';
   let climb;
+
+  function svgFunc(node, svg) {
+    return {
+      update() {
+        console.log('updated svg', svg, node);
+        // this adds double routes > clear svg first?
+        // also breaks constant scale dots
+        d3ify();
+      },
+      destroy() {
+        console.log('destroyed', node);
+      },
+    };
+  }
 
   function afterComma(float) {
     // turn first digit of a number into a 0 (this will break if more than 2 digits before 0)
@@ -147,7 +162,7 @@
       .append('g')
       .attr('class', 'routes');
 
-    console.log(svg, routes);
+    // console.log(svg, routes);
 
     // scale this based on zoom instead of dots
     climbs = routes
@@ -189,12 +204,12 @@
     // svg.select('#zoom_layer').
 
     // wrap svg element
-    // d3.selectAll('g#zoom_layer').each(function () {
-    //   var el = this;
+    // d3.selectAll('g#zoom_layer').each(() => {
+    //   let el = this;
     //   d3.select(el.parentNode)
     //     .insert('g')
-    //     .attr('class', 'wrapped')
-    //     .append(function () {
+    //     .attr('class', 'translate')
+    //     .append(() => {
     //       return el;
     //     });
     // });
@@ -419,7 +434,7 @@
 </script>
 
 <main>
-  <div class="svgContainer">
+  <div class="svgContainer" use:svgFunc={gymSvg}>
     {@html gymSvg}
   </div>
 

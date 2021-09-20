@@ -1,16 +1,19 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
+  // import fetchGymData from '../modules/fetchGymData.js';
+  import { gyms } from '../store.js';
 
-  let gyms = [];
   let selected;
 
   const dispatch = createEventDispatcher();
 
   onMount(async () => {
-    const data = await fetch('https://api.toplogger.nu/v1/gyms/');
-    gyms = await data.json();
-
-    console.log(gyms);
+    if ($gyms == null) {
+      console.log('fetching gyms');
+      const data = await fetch('https://api.toplogger.nu/v1/gyms/');
+      const json = await data.json();
+      gyms.set(json);
+    }
   });
 </script>
 
@@ -22,13 +25,15 @@
     bind:value={selected}
     on:change={() => {
       // update data
-      console.log(selected);
+      // console.log(selected);
       dispatch('change', selected);
     }}
   >
-    {#each gyms as gym}
-      <option value={gym}>{gym.name}</option>
-    {/each}
+    {#if $gyms}
+      {#each $gyms as gym}
+        <option value={gym}>{gym.name}</option>
+      {/each}
+    {/if}
   </select>
 </div>
 
