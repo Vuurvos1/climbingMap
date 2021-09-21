@@ -19,7 +19,7 @@
         console.log('updated svg', svg, node);
         // this adds double routes > clear svg first?
         // also breaks constant scale dots
-        d3ify();
+        // d3ify();
       },
       destroy() {
         console.log('destroyed', node);
@@ -149,20 +149,26 @@
     const h = size.clientHeight;
     const svg = d3.select('svg.flex').attr('width', w).attr('height', h);
 
-    // const bbox = svg.select('#zoom_layer').node().getBBox();
-    // console.log('bbox', bbox);
-    // console.log();
-    // svg.select('#zoom_layer').attr('transform', () => {
-    //   return `translate(${-bbox.x}, ${-bbox.y})`;
-    // });
+    // each has to not be an arrow function or "this" will be undefined
+    d3.selectAll('g#zoom_layer').each(function () {
+      let el = this;
+      d3.select(el.parentNode)
+        .insert('g')
+        .attr('class', 'zoom')
+        .append(() => el);
+    });
+
+    // normalize floorplan translation and scale
+    const bbox = svg.select('#zoom_layer').node().getBBox();
+    d3.select('#zoom_layer').attr(
+      'transform',
+      `translate(${-bbox.x}, ${-bbox.y}) scale(1)`
+    );
 
     const routes = svg
       .select('#zoom_layer')
-
       .append('g')
       .attr('class', 'routes');
-
-    // console.log(svg, routes);
 
     // scale this based on zoom instead of dots
     climbs = routes
@@ -176,10 +182,8 @@
       .attr('class', 'route')
 
       .on('click', (e, d) => {
-        // console.log(d);
+        // TODO zoom into and center on dot on click
         climb = d;
-
-        // zoom in into dot
       })
       .append('g')
       .attr('class', 'scale');
@@ -189,6 +193,7 @@
       .attr('r', dotSize)
       .style('fill', (d) => `#${routeColor(d.id, groups)}`);
 
+    // TODO base text color on background color
     climbs
       .append('text')
       .attr('dy', 5)
@@ -196,23 +201,6 @@
         return gradeConverter(d.grade);
       })
       .attr('text-anchor', 'middle');
-    // base text color on background color
-
-    //setup zoom and initial zoom
-    const bbox = svg.select('#zoom_layer').node().getBBox();
-
-    // svg.select('#zoom_layer').
-
-    // wrap svg element
-    // d3.selectAll('g#zoom_layer').each(() => {
-    //   let el = this;
-    //   d3.select(el.parentNode)
-    //     .insert('g')
-    //     .attr('class', 'translate')
-    //     .append(() => {
-    //       return el;
-    //     });
-    // });
 
     const zoom = d3
       .zoom()
@@ -220,32 +208,28 @@
       // .translateExtent([
       //   [-6000, -5000],
       //   [5000, 6000],
-      // ]) // change these values to be more dynamic
+      // ]) // change these values to be more dynamic and based on scale
       .on('zoom', (e, d) => {
-        d3.select('g#zoom_layer').attr('transform', e.transform);
-        console.log('zoom');
-
+        svg.select('.zoom').attr('transform', e.transform);
         // this is probably a bad way of doing this lol
         routes.selectAll('g.scale').attr('transform', () => {
           return `scale(${1 / e.transform.k})`;
         });
       });
 
+    //setup zoom and initial zoom
+    const baseScale = (h / bbox.height) * 0.9;
+    const baseX = w / 2 - (bbox.width / 2) * baseScale;
+    const baseY = h / 2 - (bbox.height / 2) * baseScale;
     svg
       .call(zoom)
       .call(
         zoom.transform,
-        d3.zoomIdentity
-          .translate(bbox.x + w / 2 - 200, bbox.y - h - 250)
-          .scale(h / bbox.height - (h / bbox.height) * 0.1)
+        d3.zoomIdentity.translate(baseX, baseY).scale(baseScale)
       );
 
-    console.log(bbox);
-    svg.select('#zoom_layer').attr('transform', () => {
-      const scale = bbox.height / h;
-      return `translate(${bbox.x + w / 2 - 200}, ${bbox.y - h - 250}) scale(${
-        h / bbox.height - (h / bbox.height) * 0.1
-      })`;
+    svg.select('.zoom').attr('transform', () => {
+      return `translate(${baseX}, ${baseY}) scale(${baseScale})`;
     });
 
     d3.select('g#zoom_layer').on('click', (e, d) => {
@@ -333,23 +317,7 @@
       */
     });
 
-    console.log('rerun d3');
-
-    // svg.call(
-    //   zoom.transform,
-    //   zoomIdentity
-    //     .translate(w / 2, h / 2)
-    //     .scale(
-    //       Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height))
-    //     )
-    // );
-
-    // set zoom
-    // svg.call(
-    //   zoom.transform,
-    //   d3.zoomIdentity,
-    //   d3.zoomTransform(svg.node()).invert([w / 2, h / 2])
-    // );
+    console.log('ran d3 ify');
 
     function x(val) {
       const map = d3.select('g#zoom_layer');
@@ -438,15 +406,15 @@
     {@html gymSvg}
   </div>
 
-  <GymSelect
+  <!-- <GymSelect
     on:change={async (e) => {
       // console.log(e.detail);
       const data = await fetchGymData(e.detail.id, e.detail.id_name);
       gymSvg = await data.svg;
 
-      d3ify(data.climbs, data.groups);
+      // d3ify(data.climbs, data.groups);
     }}
-  />
+  /> -->
   <RoutePreview data={climb} />
 </main>
 
