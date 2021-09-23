@@ -13,6 +13,12 @@
   let gymSvg = '';
   let climb;
 
+  let windowWidth = window.innerWidth;
+  let windowHeight = window.innerHeight;
+
+  $: windowWidth, mapSetup();
+  $: windowHeight, mapSetup();
+
   function svgFunc(node, svg) {
     return {
       update() {
@@ -140,14 +146,27 @@
     return col;
   }
 
+  function mapSetup() {
+    console.log('map setup');
+    // set width and height
+    // set zoom
+
+    const svg = d3
+      .select('svg.flex')
+      .attr('width', windowWidth)
+      .attr('height', windowHeight);
+  }
+
   function d3ify(climbData, groups) {
     const dotSize = 20;
 
     // update these on resize.
-    const size = document.querySelector('svg.flex');
-    const w = size.clientWidth;
-    const h = size.clientHeight;
-    const svg = d3.select('svg.flex').attr('width', w).attr('height', h);
+    const w = windowWidth;
+    const h = windowHeight;
+    const svg = d3
+      .select('svg.flex')
+      .attr('width', windowWidth)
+      .attr('height', windowHeight);
 
     // each has to not be an arrow function or "this" will be undefined
     d3.selectAll('g#zoom_layer').each(function () {
@@ -232,49 +251,12 @@
       return `translate(${baseX}, ${baseY}) scale(${baseScale})`;
     });
 
-    d3.select('g#zoom_layer').on('click', (e, d) => {
-      // console.log('clicked a thing');
-      /*
-      e.stopPropagation();
-      // const size = document.querySelector('#zoom_layer');
-      // console.log(size);
-      // const w = size.clientWidth;
-      // const h = size.clientHeight;
-
-      const w = svg.node().getBoundingClientRect().width;
-      const h = svg.node().getBoundingClientRect().height;
-
-      const el = d3.select('g#zoom_layer');
-      const box = el.node().getBoundingClientRect();
-      console.log(box);
-      const elw = box.width;
-      const elh = box.height;
-
-      // get clicked bounds?
-      console.log('clicked svg', w, h);
-
-      // const [[x0, y0], [x1, y1]] = d3.path.bounds(d);
-
-      e.stopPropagation();
-
-      svg
-        .transition()
-        .duration(750)
-        .call(
-          zoom.transform,
-          d3.zoomIdentity
-            .translate(elw / 2, elh / 2)
-            .scale(Math.min(8, 0.9 / Math.max(elw / w, elh / h)))
-            .translate(-(box.left + box.right) / 2, -(box.top + box.bottom) / 2)
-        );
-
-      */
-    });
-
+    // zoom into map region on click
     d3.selectAll('g.map-region').on('click', function (e) {
       e.stopPropagation();
       console.log('clicked map region', this.id);
 
+      // zoom into map region
       const el = this;
       const nodeBox = svg.select(`#${el.id}`).node().getBBox();
       console.log(nodeBox);
@@ -304,43 +286,7 @@
       // console.log(width, height);
 
       // console.log('click map region', x, e);
-
-      // svg
-      //   .transition()
-      //   .duration(750)
-      //   .call(
-      //     zoom.transform,
-      //     d3.zoomIdentity
-      //       .translate(width / 2, height / 2)
-      //       .scale(Math.min( Math.max()))
-      //       .translate(-x.x / 2, -x.y / 2)
-      //   );
-
-      /*
-      const [[x0, y0], [x1, y1]] = path.bounds(d);
-
-      const size = document.querySelector('svg.flex');
-      const width = size.clientWidth;
-      const height = size.clientHeight;
-
-      svg
-        .transition()
-        .duration(750)
-        .call(
-          zoom.transform,
-          d3.zoomIdentity
-            .translate(width / 2, height / 2)
-            .scale(
-              Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height))
-            )
-            .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-          d3.pointer(e, svg.node())
-        );
-      // zoom into map regeon
-      */
     });
-
-    console.log('ran d3 ify');
 
     function x(val) {
       const map = d3.select('g#zoom_layer');
@@ -423,6 +369,8 @@
     d3ify(climbs, groups);
   });
 </script>
+
+<svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} />
 
 <main>
   <div class="svgContainer" use:svgFunc={gymSvg}>
