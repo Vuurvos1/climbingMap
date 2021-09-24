@@ -259,47 +259,30 @@
       // zoom into map region
       const el = this;
       const nodeBox = svg.select(`#${el.id}`).node().getBBox();
-      console.log(nodeBox);
 
       const scale = (h / nodeBox.height) * 0.8;
-      console.log(nodeBox.x - bbox.x);
 
-      // TODO calculate these properly
-      const xOffset = bbox.x - nodeBox.x / 2;
-      const yOffset = bbox.y * scale * 2;
+      let x = -(nodeBox.x - bbox.x) * scale;
+      let y = -(nodeBox.y - bbox.y) * scale;
 
-      const x = w / 2 - (nodeBox.width / 2) * scale + xOffset; // add offset
-      const y = h / 2 - (nodeBox.height / 2) * scale - yOffset; //add offset
-
-      console.log(scale, x, y);
-
-      // const baseX = w / 2 - (bbox.width / 2) * baseScale;
-      // const baseY = h / 2 - (bbox.height / 2) * baseScale;
+      let yOff = h / 2 - (nodeBox.height / 2) * scale;
+      let xOff = w / 2 - (nodeBox.width / 2) * scale;
 
       svg
         .transition()
         .duration(500)
-        .call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(scale));
-      // const size = document.querySelector('svg.flex');
-      // const width = size.clientWidth;
-      // const height = size.clientHeight;
-      // console.log(width, height);
-
-      // console.log('click map region', x, e);
+        .call(
+          zoom.transform,
+          d3.zoomIdentity.translate(x + xOff, y + yOff).scale(scale)
+        );
     });
 
     function x(val) {
-      const map = d3.select('g#zoom_layer');
-
-      const w = map.node().getBoundingClientRect().width;
-      return w * val;
+      return bbox.width * val;
     }
 
     function y(val) {
-      const map = d3.select('g#zoom_layer');
-
-      const h = map.node().getBoundingClientRect().height;
-      return h * val;
+      return bbox.height * val;
     }
   }
 
