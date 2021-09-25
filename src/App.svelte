@@ -196,13 +196,31 @@
       .enter()
       .append('g')
       .attr('transform', (d) => {
-        return `translate(${x(d.position_x)}, ${y(d.position_y)}) scale(${1})`;
+        return `translate(${x(d.position_x)}, ${y(d.position_y)})`;
       })
       .attr('class', 'route')
 
-      .on('click', (e, d) => {
-        // TODO zoom into and center on dot on click
+      .on('click', function (e, d) {
+        e.stopPropagation();
         climb = d;
+
+        const scale = (bbox.width / w) * 0.75;
+
+        const x = bbox.width * d.position_x - bbox.x;
+        const y = bbox.height * d.position_y - bbox.y;
+
+        const xOff = w / 2 - 2.5; // 2.5 = half the dot size
+        const yOff = h / 2 - 2.5;
+
+        svg
+          .transition()
+          .duration(500)
+          .call(
+            zoom.transform,
+            d3.zoomIdentity
+              .translate(-x * scale + xOff, -y * scale + yOff)
+              .scale(scale)
+          );
       })
       .append('g')
       .attr('class', 'scale');
@@ -262,11 +280,11 @@
 
       const scale = (h / nodeBox.height) * 0.8;
 
-      let x = -(nodeBox.x - bbox.x) * scale;
-      let y = -(nodeBox.y - bbox.y) * scale;
+      const x = -(nodeBox.x - bbox.x) * scale;
+      const y = -(nodeBox.y - bbox.y) * scale;
 
-      let yOff = h / 2 - (nodeBox.height / 2) * scale;
-      let xOff = w / 2 - (nodeBox.width / 2) * scale;
+      const yOff = h / 2 - (nodeBox.height / 2) * scale;
+      const xOff = w / 2 - (nodeBox.width / 2) * scale;
 
       svg
         .transition()
@@ -380,5 +398,8 @@
 
   :global(.route) {
     cursor: pointer;
+
+    /* use filter instead of box shadow because it is an svg element */
+    filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.35));
   }
 </style>
