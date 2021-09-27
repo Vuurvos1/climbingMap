@@ -235,6 +235,9 @@
       .text((d) => {
         return gradeConverter(d.grade);
       })
+      .attr('class', (d) => {
+        return getContrast(routeColor(d.id, groups));
+      })
       .attr('text-anchor', 'middle');
 
     const zoom = d3
@@ -333,6 +336,24 @@
     return url;
   }
 
+  function getContrast(hexcolor) {
+    // If a leading # is provided, remove it
+    if (hexcolor.slice(0, 1) === '#') {
+      hexcolor = hexcolor.slice(1);
+    }
+
+    // Convert to RGB value
+    const r = parseInt(hexcolor.substr(0, 2), 16);
+    const g = parseInt(hexcolor.substr(2, 2), 16);
+    const b = parseInt(hexcolor.substr(4, 2), 16);
+
+    // Get YIQ ratio
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
+    // Check contrast
+    return yiq >= 128 ? 'black' : 'white';
+  }
+
   onMount(async () => {
     let climbs, groups;
 
@@ -389,5 +410,13 @@
 
     /* use filter instead of box shadow because it is an svg element */
     filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.35));
+  }
+
+  :global(.white) {
+    fill: var(--white);
+  }
+
+  :global(.black) {
+    fill: var(--black);
   }
 </style>
