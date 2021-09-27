@@ -22,13 +22,13 @@
   function svgFunc(node, svg) {
     return {
       update() {
-        console.log('updated svg', svg, node);
+        // console.log('updated svg', svg, node);
         // this adds double routes > clear svg first?
         // also breaks constant scale dots
         // d3ify();
       },
       destroy() {
-        console.log('destroyed', node);
+        // console.log('destroyed', node);
       },
     };
   }
@@ -147,22 +147,21 @@
   }
 
   function mapSetup() {
-    console.log('map setup');
+    // console.log('map setup');
     // set width and height
     // set zoom
-
-    const svg = d3
-      .select('svg.flex')
-      .attr('width', windowWidth)
-      .attr('height', windowHeight);
+    // const svg = d3
+    //   .select('svg.flex')
+    //   .attr('width', windowWidth)
+    //   .attr('height', windowHeight);
   }
 
   function d3ify(climbData, groups) {
     const dotSize = 20;
 
     // update these on resize.
-    const w = windowWidth;
-    const h = windowHeight;
+    // const w = windowWidth;
+    // const h = windowHeight;
     const svg = d3
       .select('svg.flex')
       .attr('width', windowWidth)
@@ -179,13 +178,10 @@
 
     // normalize floorplan translation and scale
     const bbox = svg.select('#zoom_layer').node().getBBox();
-    d3.select('#zoom_layer').attr(
-      'transform',
-      `translate(${-bbox.x}, ${-bbox.y}) scale(1)`
-    );
 
     const routes = svg
       .select('#zoom_layer')
+      .attr('transform', `translate(${-bbox.x}, ${-bbox.y})`)
       .append('g')
       .attr('class', 'routes');
 
@@ -196,21 +192,23 @@
       .enter()
       .append('g')
       .attr('transform', (d) => {
-        return `translate(${x(d.position_x)}, ${y(d.position_y)})`;
+        return `translate(${bbox.width * d.position_x}, ${
+          bbox.height * d.position_y
+        })`;
       })
       .attr('class', 'route')
 
-      .on('click', function (e, d) {
+      .on('click', (e, d) => {
         e.stopPropagation();
         climb = d;
 
-        const scale = (bbox.width / w) * 0.75;
+        const scale = (bbox.width / windowWidth) * 0.75;
 
         const x = bbox.width * d.position_x - bbox.x;
         const y = bbox.height * d.position_y - bbox.y;
 
-        const xOff = w / 2 - 2.5; // 2.5 = half the dot size
-        const yOff = h / 2 - 2.5;
+        const xOff = windowWidth / 2 - 2.5; // 2.5 = half the dot size
+        const yOff = windowHeight / 2 - 2.5;
 
         svg
           .transition()
@@ -248,16 +246,15 @@
       // ]) // change these values to be more dynamic and based on scale
       .on('zoom', (e, d) => {
         svg.select('.zoom').attr('transform', e.transform);
+
         // this is probably a bad way of doing this lol
-        routes.selectAll('g.scale').attr('transform', () => {
-          return `scale(${1 / e.transform.k})`;
-        });
+        climbs.attr('transform', `scale(${1 / e.transform.k})`);
       });
 
     //setup zoom and initial zoom
-    const baseScale = (h / bbox.height) * 0.9;
-    const baseX = w / 2 - (bbox.width / 2) * baseScale;
-    const baseY = h / 2 - (bbox.height / 2) * baseScale;
+    const baseScale = (windowHeight / bbox.height) * 0.9;
+    const baseX = windowWidth / 2 - (bbox.width / 2) * baseScale;
+    const baseY = windowHeight / 2 - (bbox.height / 2) * baseScale;
     svg
       .call(zoom)
       .call(
@@ -265,26 +262,25 @@
         d3.zoomIdentity.translate(baseX, baseY).scale(baseScale)
       );
 
-    svg.select('.zoom').attr('transform', () => {
-      return `translate(${baseX}, ${baseY}) scale(${baseScale})`;
-    });
+    svg
+      .select('.zoom')
+      .attr('transform', `translate(${baseX}, ${baseY}) scale(${baseScale})`);
 
     // zoom into map region on click
     d3.selectAll('g.map-region').on('click', function (e) {
       e.stopPropagation();
-      console.log('clicked map region', this.id);
+      // console.log('clicked map region', this.id);
 
       // zoom into map region
-      const el = this;
-      const nodeBox = svg.select(`#${el.id}`).node().getBBox();
+      const nodeBox = svg.select(`#${this.id}`).node().getBBox();
 
-      const scale = (h / nodeBox.height) * 0.8;
+      const scale = (windowHeight / nodeBox.height) * 0.8;
 
       const x = -(nodeBox.x - bbox.x) * scale;
       const y = -(nodeBox.y - bbox.y) * scale;
 
-      const yOff = h / 2 - (nodeBox.height / 2) * scale;
-      const xOff = w / 2 - (nodeBox.width / 2) * scale;
+      const yOff = windowHeight / 2 - (nodeBox.height / 2) * scale;
+      const xOff = windowWidth / 2 - (nodeBox.width / 2) * scale;
 
       svg
         .transition()
@@ -294,14 +290,6 @@
           d3.zoomIdentity.translate(x + xOff, y + yOff).scale(scale)
         );
     });
-
-    function x(val) {
-      return bbox.width * val;
-    }
-
-    function y(val) {
-      return bbox.height * val;
-    }
   }
 
   // https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg
