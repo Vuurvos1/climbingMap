@@ -3,6 +3,9 @@
   // import { gyms } from './store';
   import * as d3 from 'd3';
 
+  import { getContrast, routeColor } from './modules/colorHelpers';
+  import { gradeConverter } from './modules/gradeConverter';
+
   import GymSelect from './components/GymSelect.svelte';
   import RoutePreview from './components/RoutePreview.svelte';
   import fetchGymData from './modules/fetchGymData';
@@ -31,119 +34,6 @@
         // console.log('destroyed', node);
       },
     };
-  }
-
-  function afterComma(float) {
-    // turn first digit of a number into a 0 (this will break if more than 2 digits before 0)
-    return float.replace(/^./g, '0');
-  }
-
-  function gradeConverter(val) {
-    // convert these to strings?
-    const gradeBase = ~~Number(val);
-    let gradeMod = afterComma(val);
-
-    // 2+
-    // 2.75
-    if (val < 3) {
-      gradeMod = val;
-    }
-
-    // a  a+  b   b+  c   c+
-    // .0 .17 .33 .5  .67 .83
-    const gradeLookup = {
-      '2.75': '+',
-      '0.0': 'a',
-      '0.17': 'a+',
-      '0.33': 'b',
-      '0.5': 'b+',
-      '0.67': 'c',
-      '0.83': 'c+',
-    };
-
-    const modifier = gradeLookup[gradeMod] ? gradeLookup[gradeMod] : '';
-
-    return `${gradeBase}${modifier}`;
-  }
-
-  function gradeColor(grade) {
-    // return a color based on a boulder grade
-    const gradeBase = String(~~Number(grade));
-    // console.log(gradeBase);
-
-    /*
-    2/3a
-    3/4a
-    4c/5a
-    black yellow f9ff00 0c0505
-
-    red ce0000
-    green 0f480c
-    yellow dcd138
-    orange ff7200
-    black 000000
-    pink ff00ed
-    blue 0093ff
-    purple 822fe0
-    lime 05ff00
-    white
-    
-    */
-
-    const gradeColors = {
-      // '2'
-      // '3a'
-      // ''
-      // '4'
-      // '5'
-      // '6'
-      // '7'
-      // '8'
-      // '9'
-    };
-
-    return gradeColor[gradeBase];
-  }
-
-  function routeColor(climb_id, groups) {
-    // filter groups arr > climb_group > climb_id > if match get name
-    let name = groups.filter((el, i) => {
-      for (const item of el.climb_groups) {
-        if (item.climb_id == climb_id) {
-          return el;
-        } else {
-          false;
-        }
-      }
-    });
-
-    // console.log(name);
-    if (name.length < 1) {
-      name = 'aaa';
-    } else {
-      name = name[0].name;
-    }
-
-    // color lookup table
-    const colors = {
-      red: 'ce0000',
-      green: '0f480c',
-      yellow: 'dcd138',
-      orange: 'ff7200',
-      black: '000000',
-      pink: 'ff00ed',
-      blue: '0093ff',
-      purple: '822fe0',
-      lime: '05ff00',
-      white: 'ffffff',
-    };
-
-    // color fallback if not defined
-    const col = colors[name.toLowerCase()]
-      ? colors[name.toLowerCase()]
-      : '0000ff';
-
-    return col;
   }
 
   function mapSetup() {
@@ -233,7 +123,8 @@
       .append('text')
       .attr('dy', 5)
       .text((d) => {
-        return gradeConverter(d.grade);
+        // TODO update to be based on route type and gym grading
+        return gradeConverter(d.grade, 'french_boulder');
       })
       .attr('class', (d) => {
         return getContrast(routeColor(d.id, groups));
@@ -272,8 +163,6 @@
     // zoom into map region on click
     d3.selectAll('g.map-region').on('click', function (e) {
       e.stopPropagation();
-      // console.log('clicked map region', this.id);
-
       // zoom into map region
       const nodeBox = svg.select(`#${this.id}`).node().getBBox();
 
@@ -334,24 +223,6 @@
     )}`;
 
     return url;
-  }
-
-  function getContrast(hexcolor) {
-    // If a leading # is provided, remove it
-    if (hexcolor.slice(0, 1) === '#') {
-      hexcolor = hexcolor.slice(1);
-    }
-
-    // Convert to RGB value
-    const r = parseInt(hexcolor.substr(0, 2), 16);
-    const g = parseInt(hexcolor.substr(2, 2), 16);
-    const b = parseInt(hexcolor.substr(4, 2), 16);
-
-    // Get YIQ ratio
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-
-    // Check contrast
-    return yiq >= 128 ? 'black' : 'white';
   }
 
   onMount(async () => {
