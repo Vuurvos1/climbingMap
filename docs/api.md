@@ -78,4 +78,7 @@ climb/route id can be found in the list of climbs of a gym
 
 <!-- https://api.toplogger.nu/v1/groups?json_params=%7B%22filters%22:%7B%22gym_id%22:8,%22score_system%22:%22none%22,%22live%22:true%7D,%22includes%22:[%22climb_groups%22]%7D -->
 
+ <!-- https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg -->
+ <!-- https://api.toplogger.nu/v1/gyms/8/climbs?json_params=%7B%22filters%22:%7B%22deleted%22:false,%22live%22:true%7D%7D -->
+
 `baseurl/groups?json_params`

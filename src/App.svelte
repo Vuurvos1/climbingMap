@@ -50,8 +50,6 @@
     const dotSize = 20;
 
     // update these on resize.
-    // const w = windowWidth;
-    // const h = windowHeight;
     const svg = d3
       .select('svg.flex')
       .attr('width', windowWidth)
@@ -118,7 +116,6 @@
       .attr('r', dotSize)
       .style('fill', (d) => `#${routeColor(d.id, groups)}`);
 
-    // TODO base text color on background color
     climbs
       .append('text')
       .attr('dy', 5)
@@ -131,15 +128,21 @@
       })
       .attr('text-anchor', 'middle');
 
+    const zoomEl = svg.select('.zoom');
+
+    // not sure if translateExtents gives the right effect of
+    // clamping map to withing viewport
+    const zoomPadding = 150;
+
     const zoom = d3
       .zoom()
+      .translateExtent([
+        [-zoomPadding, -zoomPadding],
+        [bbox.width + zoomPadding, bbox.height + zoomPadding],
+      ]) // change these values to be more dynamic and based on scale
       .scaleExtent([0.1, 2.5])
-      // .translateExtent([
-      //   [-6000, -5000],
-      //   [5000, 6000],
-      // ]) // change these values to be more dynamic and based on scale
       .on('zoom', (e, d) => {
-        svg.select('.zoom').attr('transform', e.transform);
+        zoomEl.attr('transform', e.transform);
 
         // this is probably a bad way of doing this lol
         climbs.attr('transform', `scale(${1 / e.transform.k})`);
@@ -183,9 +186,6 @@
         );
     });
   }
-
-  // https://cdn1.toplogger.nu/images/gyms/bruut_boulder_breda/floorplan.svg
-  // https://api.toplogger.nu/v1/gyms/8/climbs?json_params=%7B%22filters%22:%7B%22deleted%22:false,%22live%22:true%7D%7D
 
   function svgUrl(gymName) {
     const url = `https://cdn1.toplogger.nu/images/gyms/${gymName}/floorplan.svg`;
@@ -267,6 +267,7 @@
       // d3ify(data.climbs, data.groups);
     }}
   /> -->
+
   <RoutePreview data={climb} />
 </main>
 
