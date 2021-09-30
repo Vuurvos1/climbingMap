@@ -21,7 +21,21 @@ export function getContrast(hexcolor) {
   return yiq >= 128 ? 'black' : 'white';
 }
 
-export function routeColor(climb_id, groups) {
+// color lookup table
+const colors = {
+  red: '#ce0000',
+  green: '#0f480c',
+  yellow: '#dcd138',
+  orange: '#ff7200',
+  black: '#000000',
+  pink: '#ff00ed',
+  blue: '#0093ff',
+  purple: '#822fe0',
+  lime: '#05ff00',
+  white: '#ffffff',
+};
+
+export function getRouteColor(climb_id, groups) {
   // filter groups arr > climb_group > climb_id > if match get name
   let name = groups.filter((el, i) => {
     for (const item of el.climb_groups) {
@@ -33,31 +47,54 @@ export function routeColor(climb_id, groups) {
     }
   });
 
-  // console.log(name);
   if (name.length < 1) {
     name = 'aaa';
   } else {
     name = name[0].name;
   }
 
-  // color lookup table
-  const colors = {
-    red: 'ce0000',
-    green: '0f480c',
-    yellow: 'dcd138',
-    orange: 'ff7200',
-    black: '000000',
-    pink: 'ff00ed',
-    blue: '0093ff',
-    purple: '822fe0',
-    lime: '05ff00',
-    white: 'ffffff',
-  };
+  name = name.toLowerCase();
+
+  if (name.split('/').length > 1) {
+    const cols = name.split('/');
+    name = cols[0];
+  }
 
   // color fallback if not defined
-  const col = colors[name.toLowerCase()]
-    ? colors[name.toLowerCase()]
-    : '0000ff';
-
+  const col = colors[name] ? colors[name] : '#0000ff';
   return col;
+}
+
+export function getRouteColorVars(climb_id, groups) {
+  // filter groups arr > climb_group > climb_id > if match get name
+  let name = groups.filter((el, i) => {
+    for (const item of el.climb_groups) {
+      if (item.climb_id == climb_id) {
+        return el;
+      } else {
+        false;
+      }
+    }
+  });
+
+  if (name.length < 1) {
+    name = 'aaa';
+  } else {
+    name = name[0].name;
+  }
+
+  name = name.toLowerCase();
+
+  if (name.split('/').length > 1) {
+    const cols = name.split('/');
+
+    return `--dot-col: linear-gradient(315deg, ${colors[cols[0]]} 50%, ${
+      colors[cols[1]]
+    } 50%)`;
+  }
+
+  // color fallback if not defined
+  const col = colors[name] ? colors[name] : '#0000ff';
+
+  return `--dot-col: ${col}`;
 }

@@ -3,7 +3,11 @@
   // import { gyms } from './store';
   import * as d3 from 'd3';
 
-  import { getContrast, routeColor } from './modules/colorHelpers';
+  import {
+    getContrast,
+    getRouteColor,
+    getRouteColorVars,
+  } from './modules/colorHelpers';
   import { gradeConverter } from './modules/gradeConverter';
 
   import GymSelect from './components/GymSelect.svelte';
@@ -40,10 +44,10 @@
     // console.log('map setup');
     // set width and height
     // set zoom
-    // const svg = d3
-    //   .select('svg.flex')
-    //   .attr('width', windowWidth)
-    //   .attr('height', windowHeight);
+    const svg = d3
+      .select('svg.flex')
+      .attr('width', windowWidth)
+      .attr('height', windowHeight);
   }
 
   function d3ify(climbData, groups) {
@@ -108,25 +112,23 @@
               .scale(scale)
           );
       })
-      .append('g')
+      .append('foreignObject')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', 1)
+      .attr('height', 1)
       .attr('class', 'scale');
 
     climbs
-      .append('circle')
-      .attr('r', dotSize)
-      .style('fill', (d) => `#${routeColor(d.id, groups)}`);
-
-    climbs
-      .append('text')
-      .attr('dy', 5)
-      .text((d) => {
+      .append('xhtml:div')
+      .html((d) => {
         // TODO update to be based on route type and gym grading
         return gradeConverter(d.grade, 'french_boulder');
       })
-      .attr('class', (d) => {
-        return getContrast(routeColor(d.id, groups));
-      })
-      .attr('text-anchor', 'middle');
+      .attr('style', (d) => `${getRouteColorVars(d.id, groups)}`)
+      .style('color', (d) => {
+        return getContrast(getRouteColor(d.id, groups));
+      });
 
     const zoomEl = svg.select('.zoom');
 
@@ -279,9 +281,25 @@
 
   :global(.route) {
     cursor: pointer;
+  }
 
-    /* use filter instead of box shadow because it is an svg element */
-    filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.35));
+  :global(.route foreignObject) {
+    overflow: visible;
+  }
+
+  :global(.route div) {
+    width: 40px;
+    height: 40px;
+    background: var(--dot-col);
+    position: relative;
+
+    border-radius: 5rem;
+
+    text-align: center;
+    vertical-align: middle;
+    line-height: 38px;
+
+    box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.35);
   }
 
   :global(.white) {
