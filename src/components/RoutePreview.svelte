@@ -1,16 +1,37 @@
 <script>
   export let data;
 
+  import { fade, blur, fly, slide, scale } from 'svelte/transition';
+  import { quintOut } from 'svelte/easing';
   import { dateConvert } from '../modules/helpers';
+  import { gradeConverter } from '../modules/gradeConverter';
 </script>
 
 {#if data}
-  <div class="preview">
-    <h3>Route data</h3>
+  <div class="preview" transition:slide={{ duration: 200, easing: quintOut }}>
+    <div class="preview__header">
+      <h3>Route data</h3>
+
+      <button on:click>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-chevron-down"
+          ><polyline points="6 9 12 15 18 9" /></svg
+        >
+      </button>
+    </div>
 
     <ul>
-      <li>grade: {data.grade}</li>
-      <li>ascends: {data.nr_or_ascends}</li>
+      <li>grade: {gradeConverter(data.grade, 'french_boulder')}</li>
+      <li>ascends: {data.nr_of_ascends}</li>
       <li>average opinion: {data.average_opinion}/5.0</li>
       <li>date set: {dateConvert(data.date_set)}</li>
     </ul>
@@ -23,19 +44,46 @@
 
 <style>
   h3 {
-    margin-bottom: 1ch;
+    margin-right: auto;
+  }
+
+  button {
+    background: none;
+    border: none;
+    line-height: 0;
   }
 
   .preview {
     position: fixed;
+    bottom: 0;
+    left: 0;
 
-    bottom: 1rem;
-    right: 1rem;
+    width: 100vw;
 
-    padding: 1rem 2rem;
+    padding: 1rem 1rem;
 
-    border-radius: 1rem;
     background-color: var(--white);
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  }
+
+  .preview__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    margin-bottom: 1rem;
+  }
+
+  li {
+    list-style: none;
+  }
+
+  @media screen and (min-width: 32rem) {
+    .preview {
+      width: initial;
+      right: 1rem;
+      left: initial;
+      bottom: 1rem;
+    }
   }
 </style>

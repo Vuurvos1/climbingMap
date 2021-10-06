@@ -39,14 +39,6 @@
 
 <style>
   .select {
-    position: fixed;
-
-    top: 1rem;
-    left: 1rem;
-
     padding: 1rem;
-
-    background-color: #c1c1c1;
-    border-radius: 1rem;
   }
 </style>

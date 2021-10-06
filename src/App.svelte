@@ -13,8 +13,11 @@
   import GymSelect from './components/GymSelect.svelte';
   import RoutePreview from './components/RoutePreview.svelte';
   import fetchGymData from './modules/fetchGymData';
+  import Menu from './components/Menu.svelte';
 
   const baseUrl = 'https://api.toplogger.nu/v1';
+
+  let showRouteData = false;
 
   let climbs = [];
   let gymSvg = '';
@@ -93,6 +96,7 @@
       .on('click', (e, d) => {
         e.stopPropagation();
         climb = d;
+        showRouteData = true;
 
         const scale = (bbox.width / windowWidth) * 0.75;
 
@@ -255,6 +259,8 @@
 
 <svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} />
 
+<Menu />
+
 <main>
   <div class="svgContainer" use:svgFunc={gymSvg}>
     {@html gymSvg}
@@ -270,7 +276,14 @@
     }}
   /> -->
 
-  <RoutePreview data={climb} />
+  {#if showRouteData}
+    <RoutePreview
+      data={climb}
+      on:click={() => {
+        showRouteData = false;
+      }}
+    />
+  {/if}
 </main>
 
 <style>
