@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  // import { gyms } from './store';
+  import { gyms } from './store';
   import * as d3 from 'd3';
 
   import {
@@ -10,17 +10,17 @@
   } from './modules/colorHelpers';
   import { gradeConverter } from './modules/gradeConverter';
 
+  import { fetchGymData } from './modules/fetchGymData';
+
   import GymSelect from './components/GymSelect.svelte';
   import RoutePreview from './components/RoutePreview.svelte';
-  import fetchGymData from './modules/fetchGymData';
   import Menu from './components/Menu.svelte';
-
-  const baseUrl = 'https://api.toplogger.nu/v1';
 
   let showRouteData = false;
 
   let climbs = [];
   let gymSvg = '';
+  let groups;
   let climb;
 
   let windowWidth = window.innerWidth;
@@ -32,10 +32,10 @@
   function svgFunc(node, svg) {
     return {
       update() {
-        // console.log('updated svg', svg, node);
+        console.log('updated svg');
+        d3ify(climbs, groups);
+
         // this adds double routes > clear svg first?
-        // also breaks constant scale dots
-        // d3ify();
       },
       destroy() {
         // console.log('destroyed', node);
@@ -86,11 +86,13 @@
       .data(climbData)
       .enter()
       .append('g')
-      .attr('transform', (d) => {
-        return `translate(${bbox.width * d.position_x}, ${
-          bbox.height * d.position_y
-        })`;
-      })
+      .attr(
+        'transform',
+        (d) =>
+          `translate(${bbox.width * d.position_x}, ${
+            bbox.height * d.position_y
+          })`
+      )
       .attr('class', 'route')
 
       .on('click', (e, d) => {
@@ -129,10 +131,8 @@
         // TODO update to be based on route type and gym grading
         return gradeConverter(d.grade, 'french_boulder');
       })
-      .attr('style', (d) => `${getRouteColorVars(d.id, groups)}`)
-      .style('color', (d) => {
-        return getContrast(getRouteColor(d.id, groups));
-      });
+      .attr('style', (d) => getRouteColorVars(d.id, groups))
+      .style('color', (d) => getContrast(getRouteColor(d.id, groups)));
 
     const zoomEl = svg.select('.zoom');
 
@@ -193,67 +193,9 @@
     });
   }
 
-  function svgUrl(gymName) {
-    const url = `https://cdn1.toplogger.nu/images/gyms/${gymName}/floorplan.svg`;
-    return url;
-  }
-
-  function climbsUrl(gymId) {
-    const filters = {
-      filters: {
-        deleted: false,
-        live: true,
-      },
-    };
-
-    const url = `${baseUrl}/gyms/${gymId}/climbs?json_params=${encodeURIComponent(
-      JSON.stringify(filters)
-    )}`;
-
-    return url;
-  }
-
-  function groupsUrl(gymId) {
-    const filters = {
-      filters: {
-        gym_id: gymId,
-        deleted: false,
-        live: true,
-        score_system: 'none',
-      },
-      includes: ['climb_groups'],
-    };
-
-    const url = `${baseUrl}/groups?json_params=${encodeURIComponent(
-      JSON.stringify(filters)
-    )}`;
-
-    return url;
-  }
-
   onMount(async () => {
-    let climbs, groups;
-
-    [climbs, groups, gymSvg] = await Promise.all([
-      fetch(climbsUrl(8)),
-      fetch(groupsUrl(8)),
-      fetch(svgUrl('bruut_boulder_breda')),
-    ])
-      .then((res) => {
-        return Promise.all([res[0].json(), res[1].json(), res[2].text()]);
-      })
-      .then((data) => {
-        gymSvg = data[2];
-        return data;
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
-
-    // console.log(climbs, groups, svg);
-    // console.log(routeColor(133938, groups));
-
-    d3ify(climbs, groups);
+    // fetch all data
+    [climbs, groups, gymSvg] = await fetchGymData(8, 'bruut_boulder_breda');
   });
 </script>
 
@@ -265,16 +207,6 @@
   <div class="svgContainer" use:svgFunc={gymSvg}>
     {@html gymSvg}
   </div>
-
-  <!-- <GymSelect
-    on:change={async (e) => {
-      // console.log(e.detail);
-      const data = await fetchGymData(e.detail.id, e.detail.id_name);
-      gymSvg = await data.svg;
-
-      // d3ify(data.climbs, data.groups);
-    }}
-  /> -->
 
   {#if showRouteData}
     <RoutePreview

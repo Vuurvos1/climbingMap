@@ -1,8 +1,7 @@
 const baseUrl = 'https://api.toplogger.nu/v1';
 
 function svgUrl(gymName) {
-  const url = `https://cdn1.toplogger.nu/images/gyms/${gymName}/floorplan.svg`;
-  return url;
+  return `https://cdn1.toplogger.nu/images/gyms/${gymName}/floorplan.svg`;
 }
 
 function climbsUrl(gymId) {
@@ -13,11 +12,9 @@ function climbsUrl(gymId) {
     },
   };
 
-  const url = `${baseUrl}/gyms/${gymId}/climbs?json_params=${encodeURIComponent(
+  return `${baseUrl}/gyms/${gymId}/climbs?json_params=${encodeURIComponent(
     JSON.stringify(filters)
   )}`;
-
-  return url;
 }
 
 function groupsUrl(gymId) {
@@ -31,14 +28,12 @@ function groupsUrl(gymId) {
     includes: ['climb_groups'],
   };
 
-  const url = `${baseUrl}/groups?json_params=${encodeURIComponent(
+  return `${baseUrl}/groups?json_params=${encodeURIComponent(
     JSON.stringify(filters)
   )}`;
-
-  return url;
 }
 
-export default async function fetchGymData(gymId, idName) {
+export async function fetchGymData(gymId, idName) {
   const [climbs, groups, gymSvg] = await Promise.all([
     fetch(climbsUrl(gymId)),
     fetch(groupsUrl(gymId)),
@@ -48,12 +43,11 @@ export default async function fetchGymData(gymId, idName) {
       return Promise.all([res[0].json(), res[1].json(), res[2].text()]);
     })
     .then((data) => {
-      // gymSvg = data[2];
       return data;
     })
     .catch((err) => {
       throw new Error(err);
     });
 
-  return { svg: gymSvg, climbs: climbs, groups: groups };
+  return [climbs, groups, gymSvg];
 }

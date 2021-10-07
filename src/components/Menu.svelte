@@ -39,15 +39,6 @@
   </div>
 </header>
 
-<!-- <GymSelect
-    on:change={async (e) => {
-      // console.log(e.detail);
-      const data = await fetchGymData(e.detail.id, e.detail.id_name);
-      gymSvg = await data.svg;
-
-      // d3ify(data.climbs, data.groups);
-    }}
-  /> -->
 <style>
   header {
     position: fixed;
@@ -63,7 +54,8 @@
 
     z-index: 25;
 
-    background-color: #fff;
+    background-color: var(--white);
+    box-shadow: var(--shadow-1);
   }
 
   input[type='checkbox'] {
@@ -79,14 +71,17 @@
 
     height: 100vh;
     width: 20rem;
+    max-width: 100vw;
 
     z-index: -10;
 
     padding-top: 4rem;
 
-    background-color: #fff;
+    background-color: var(--white);
 
-    transform: translateX(-100%);
+    box-shadow: var(--shadow-1);
+
+    transform: translateX(-110%);
     transition: transform 0.2s ease;
   }
 

@@ -63,7 +63,7 @@
     padding: 1rem 1rem;
 
     background-color: var(--white);
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    box-shadow: var(--shadow-1);
   }
 
   .preview__header {

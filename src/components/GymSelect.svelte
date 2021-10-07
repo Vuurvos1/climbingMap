@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
-  // import fetchGymData from '../modules/fetchGymData.js';
   import { gyms } from '../store.js';
 
   let selected;
@@ -25,7 +24,6 @@
     bind:value={selected}
     on:change={() => {
       // update data
-      // console.log(selected);
       dispatch('change', selected);
     }}
   >
