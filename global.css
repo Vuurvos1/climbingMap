@@ -1,6 +1,8 @@
 :root {
   --white: #ffffff;
   --black: #000000;
+
+  --shadow-1: 0px 5px 15px rgba(0, 0, 0, 0.35);
 }
 
 * {
