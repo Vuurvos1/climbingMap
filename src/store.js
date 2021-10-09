@@ -9,5 +9,7 @@ gyms.subscribe((value) => {
   }
 });
 
+// selected gym
+
 // TODO add stores for routes, svg and groups
 // export const map = svg

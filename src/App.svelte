@@ -150,8 +150,8 @@
       .on('zoom', (e, d) => {
         zoomEl.attr('transform', e.transform);
 
-        // this is probably a bad way of doing this lol
-        climbs.attr('transform', `scale(${1 / e.transform.k})`);
+        // maybe scale the group that contains all climbs?
+        routes.attr('style', `--dot-scale: ${1 / e.transform.k}`);
       });
 
     //setup zoom and initial zoom
@@ -245,6 +245,8 @@
     line-height: 38px;
 
     box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.35);
+
+    transform: scale(var(--dot-scale));
   }
 
   :global(.white) {
