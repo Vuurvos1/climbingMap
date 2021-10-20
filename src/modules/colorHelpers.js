@@ -36,6 +36,8 @@ const colors = {
 };
 
 export function getRouteColor(climb_id, groups) {
+  // if group has color use that insead of lookup
+
   // filter groups arr > climb_group > climb_id > if match get name
   let name = groups.filter((el, i) => {
     for (const item of el.climb_groups) {

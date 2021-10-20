@@ -1,7 +1,14 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
+
   import GymSelect from './GymSelect.svelte';
 
+  // import { fetchGymData } from '../modules/fetchGymData';
+  const dispatch = createEventDispatcher();
+
   let menuOpen = false;
+
+  export let selectedGym;
 </script>
 
 <header>
@@ -29,11 +36,11 @@
 
   <div class="menu" class:open={menuOpen}>
     <GymSelect
-      on:change={async (e) => {
+      on:change={(e) => {
+        selectedGym = e.detail;
         // console.log(e.detail);
-        // const data = await fetchGymData(e.detail.id, e.detail.id_name);
-        // gymSvg = await data.svg;
-        // d3ify(data.climbs, data.groups);
+
+        dispatch('changeGym', e.detail);
       }}
     />
   </div>

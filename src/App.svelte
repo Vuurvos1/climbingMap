@@ -23,6 +23,9 @@
   let groups;
   let climb;
 
+  let selectedGym = {};
+  // $: selectedGym, console.log('changed gym');
+
   let windowWidth = window.innerWidth;
   let windowHeight = window.innerHeight;
 
@@ -32,7 +35,6 @@
   function svgFunc(node, svg) {
     return {
       update() {
-        console.log('updated svg');
         d3ify(climbs, groups);
 
         // this adds double routes > clear svg first?
@@ -201,7 +203,21 @@
 
 <svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} />
 
-<Menu />
+<Menu
+  on:changeGym={async (e) => {
+    selectedGym = e.detail;
+
+    // console.log(e.detail);
+
+    // refetch routes
+    [climbs, groups, gymSvg] = await fetchGymData(
+      selectedGym.id,
+      selectedGym.id_name
+    );
+
+    console.log(climbs, groups);
+  }}
+/>
 
 <main>
   <div class="svgContainer" use:svgFunc={gymSvg}>
