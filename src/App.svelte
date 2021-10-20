@@ -23,6 +23,10 @@
   let groups;
   let climb;
 
+  let dotScale = 1;
+
+  let routesElement;
+
   let selectedGym = {};
   // $: selectedGym, console.log('changed gym');
 
@@ -56,8 +60,6 @@
   }
 
   function d3ify(climbData, groups) {
-    const dotSize = 20;
-
     // update these on resize.
     const svg = d3
       .select('svg.flex')
@@ -76,14 +78,14 @@
     // normalize floorplan translation and scale
     const bbox = svg.select('#zoom_layer').node().getBBox();
 
-    const routes = svg
+    routesElement = svg
       .select('#zoom_layer')
       .attr('transform', `translate(${-bbox.x}, ${-bbox.y})`)
       .append('g')
       .attr('class', 'routes');
 
     // scale this based on zoom instead of dots
-    climbs = routes
+    climbs = routesElement
       .selectAll('g')
       .data(climbData)
       .enter()
@@ -95,7 +97,6 @@
             bbox.height * d.position_y
           })`
       )
-      .attr('class', 'route')
 
       .on('click', (e, d) => {
         e.stopPropagation();
@@ -107,7 +108,7 @@
         const x = bbox.width * d.position_x - bbox.x;
         const y = bbox.height * d.position_y - bbox.y;
 
-        const xOff = windowWidth / 2 - 2.5; // 2.5 = half the dot size
+        const xOff = windowWidth / 2 - 2.5; // 2.5 arbitrary number
         const yOff = windowHeight / 2 - 2.5;
 
         svg
@@ -123,9 +124,8 @@
       .append('foreignObject')
       .attr('x', 0)
       .attr('y', 0)
-      .attr('width', 1)
-      .attr('height', 1)
-      .attr('class', 'scale');
+      .attr('width', 40)
+      .attr('height', 40);
 
     climbs
       .append('xhtml:div')
@@ -153,7 +153,9 @@
         zoomEl.attr('transform', e.transform);
 
         // maybe scale the group that contains all climbs?
-        routes.attr('style', `--dot-scale: ${1 / e.transform.k}`);
+        dotScale = Math.round((1 / e.transform.k) * 100) / 100;
+        // dotScale = 1 / e.transform.k;
+        // routes.attr('style', `--dot-scale: ${1 / e.transform.k}`);
       });
 
     //setup zoom and initial zoom
@@ -198,6 +200,21 @@
   onMount(async () => {
     // fetch all data
     [climbs, groups, gymSvg] = await fetchGymData(8, 'bruut_boulder_breda');
+
+    let frame;
+
+    function loop() {
+      frame = requestAnimationFrame(loop);
+
+      // logic
+      if (routesElement) {
+        routesElement.attr('style', `--dot-scale: ${dotScale}`);
+      }
+    }
+
+    loop();
+
+    return () => cancelAnimationFrame(frame);
   });
 </script>
 
@@ -240,15 +257,12 @@
     height: 100vh;
   }
 
-  :global(.route) {
+  :global(.routes foreignObject) {
+    overflow: visible;
     cursor: pointer;
   }
 
-  :global(.route foreignObject) {
-    overflow: visible;
-  }
-
-  :global(.route div) {
+  :global(.routes div) {
     width: 40px;
     height: 40px;
     background: var(--dot-col);
