@@ -16,7 +16,7 @@
   });
 </script>
 
-<div class="select">
+<div class="p-4">
   <label for="gym">Gym</label>
   <select
     name=""
@@ -36,7 +36,4 @@
 </div>
 
 <style>
-  .select {
-    padding: 1rem;
-  }
 </style>

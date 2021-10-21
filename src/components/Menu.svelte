@@ -11,8 +11,10 @@
   export let selectedGym;
 </script>
 
-<header>
-  <label for="menuToggle">
+<header
+  class="fixed top-0 left-0 z-30 flex items-center px-4 py-2 bg-white shadow-lg"
+>
+  <label for="menuToggle" class="z-20">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -32,9 +34,17 @@
       /><line x1="3" y1="18" x2="21" y2="18" /></svg
     >
   </label>
-  <input type="checkbox" id="menuToggle" bind:checked={menuOpen} />
+  <input
+    type="checkbox"
+    id="menuToggle"
+    bind:checked={menuOpen}
+    class="w-0 h-0 hidden"
+  />
 
-  <div class="menu" class:open={menuOpen}>
+  <div
+    class:open={menuOpen}
+    class="menu fixed top-0 left-0 h-screen w-80 pt-12 bg-white shadow-lg"
+  >
     <GymSelect
       on:change={(e) => {
         selectedGym = e.detail;
@@ -48,46 +58,10 @@
 
 <style>
   header {
-    position: fixed;
-    top: 0;
-    left: 0;
-
-    width: 100vw;
-
-    padding: 0.5rem 1rem;
-
-    display: flex;
-    align-items: center;
-
-    z-index: 25;
-
-    background-color: var(--white);
-    box-shadow: var(--shadow-1);
-  }
-
-  input[type='checkbox'] {
-    display: none;
-    width: 0;
-    height: 0;
+    width: calc(100vw - (100vw - 100%));
   }
 
   .menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-
-    height: 100vh;
-    width: 20rem;
-    max-width: 100vw;
-
-    z-index: -10;
-
-    padding-top: 4rem;
-
-    background-color: var(--white);
-
-    box-shadow: var(--shadow-1);
-
     transform: translateX(-110%);
     transition: transform 0.2s ease;
   }

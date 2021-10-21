@@ -237,7 +237,7 @@
 />
 
 <main>
-  <div class="svgContainer" use:svgFunc={gymSvg}>
+  <div class="svgContainer h-screen" use:svgFunc={gymSvg}>
     {@html gymSvg}
   </div>
 
@@ -254,7 +254,6 @@
 <style>
   .svgContainer {
     width: calc(100vw - (100vw - 100%));
-    height: 100vh;
   }
 
   :global(.routes foreignObject) {
