@@ -26,6 +26,7 @@ const colors = {
   red: '#ce0000',
   green: '#0f480c',
   yellow: '#dcd138',
+  geel: '#dcd138',
   orange: '#ff7200',
   black: '#000000',
   pink: '#ff00ed',
@@ -35,7 +36,7 @@ const colors = {
   white: '#ffffff',
 };
 
-export function getRouteColor(climb_id, groups) {
+export function getRouteColor(climb_id, groups, styleVar = false) {
   // if group has color use that insead of lookup
 
   // filter groups arr > climb_group > climb_id > if match get name
@@ -50,53 +51,35 @@ export function getRouteColor(climb_id, groups) {
   });
 
   if (name.length < 1) {
-    name = 'aaa';
+    name = '';
   } else {
-    name = name[0].name;
+    if (name[0].color != undefined) {
+      return name[0].color.toLowerCase();
+    } else {
+      name = name[0].name;
+    }
   }
 
   name = name.toLowerCase();
 
   if (name.split('/').length > 1) {
     const cols = name.split('/');
+
+    if (styleVar) {
+      return `--dot-col: linear-gradient(315deg, ${colors[cols[0]]} 50%, ${
+        colors[cols[1]]
+      } 50%)`;
+    }
+
     name = cols[0];
   }
 
   // color fallback if not defined
   const col = colors[name] ? colors[name] : '#0000ff';
+
+  if (styleVar) {
+    return `--dot-col: ${col}`;
+  }
+
   return col;
-}
-
-export function getRouteColorVars(climb_id, groups) {
-  // filter groups arr > climb_group > climb_id > if match get name
-  let name = groups.filter((el, i) => {
-    for (const item of el.climb_groups) {
-      if (item.climb_id == climb_id) {
-        return el;
-      } else {
-        false;
-      }
-    }
-  });
-
-  if (name.length < 1) {
-    name = 'aaa';
-  } else {
-    name = name[0].name;
-  }
-
-  name = name.toLowerCase();
-
-  if (name.split('/').length > 1) {
-    const cols = name.split('/');
-
-    return `--dot-col: linear-gradient(315deg, ${colors[cols[0]]} 50%, ${
-      colors[cols[1]]
-    } 50%)`;
-  }
-
-  // color fallback if not defined
-  const col = colors[name] ? colors[name] : '#0000ff';
-
-  return `--dot-col: ${col}`;
 }

@@ -3,11 +3,7 @@
   import { gyms } from './store';
   import * as d3 from 'd3';
 
-  import {
-    getContrast,
-    getRouteColor,
-    getRouteColorVars,
-  } from './modules/colorHelpers';
+  import { getContrast, getRouteColor } from './modules/colorHelpers';
   import { gradeConverter } from './modules/gradeConverter';
 
   import { fetchGymData } from './modules/fetchGymData';
@@ -53,13 +49,18 @@
     // console.log('map setup');
     // set width and height
     // set zoom
-    const svg = d3
-      .select('svg.flex')
-      .attr('width', windowWidth)
-      .attr('height', windowHeight);
+    // const svg = d3
+    //   .select('svg.flex')
+    //   .attr('width', windowWidth)
+    //   .attr('height', windowHeight);
+    // if (climbs && groups) {
+    //   d3ify(climbs, groups);
+    // }
   }
 
   function d3ify(climbData, groups) {
+    // convert routes data to a more light weight and minimal format?
+
     // update these on resize.
     const svg = d3
       .select('svg.flex')
@@ -78,26 +79,21 @@
     // normalize floorplan translation and scale
     const bbox = svg.select('#zoom_layer').node().getBBox();
 
+    // routesElement = svg.select('#zoom_layer > .routes').node()
+    //   ? svg.select('#zoom_layer > .routes')
+    //   : svg.select('#zoom_layer').append('g').attr('class', 'routes');
+
     routesElement = svg
       .select('#zoom_layer')
       .attr('transform', `translate(${-bbox.x}, ${-bbox.y})`)
       .append('g')
       .attr('class', 'routes');
 
-    // scale this based on zoom instead of dots
     climbs = routesElement
-      .selectAll('g')
+      .selectAll('foreignObject')
       .data(climbData)
       .enter()
-      .append('g')
-      .attr(
-        'transform',
-        (d) =>
-          `translate(${bbox.width * d.position_x}, ${
-            bbox.height * d.position_y
-          })`
-      )
-
+      .append('foreignObject')
       .on('click', (e, d) => {
         e.stopPropagation();
         climb = d;
@@ -108,8 +104,8 @@
         const x = bbox.width * d.position_x - bbox.x;
         const y = bbox.height * d.position_y - bbox.y;
 
-        const xOff = windowWidth / 2 - 2.5; // 2.5 arbitrary number
-        const yOff = windowHeight / 2 - 2.5;
+        const xOff = windowWidth / 2 - 20; // 20 should be half dot size, but seens arbitrary
+        const yOff = windowHeight / 2 - 20;
 
         svg
           .transition()
@@ -121,9 +117,8 @@
               .scale(scale)
           );
       })
-      .append('foreignObject')
-      .attr('x', 0)
-      .attr('y', 0)
+      .attr('x', (d) => bbox.width * d.position_x)
+      .attr('y', (d) => bbox.height * d.position_y)
       .attr('width', 40)
       .attr('height', 40);
 
@@ -133,8 +128,8 @@
         // TODO update to be based on route type and gym grading
         return gradeConverter(d.grade, 'french_boulder');
       })
-      .attr('style', (d) => getRouteColorVars(d.id, groups))
-      .style('color', (d) => getContrast(getRouteColor(d.id, groups)));
+      .attr('style', (d) => getRouteColor(d.id, groups, true))
+      .style('color', (d) => getContrast(getRouteColor(d.id, groups, false)));
 
     const zoomEl = svg.select('.zoom');
 
