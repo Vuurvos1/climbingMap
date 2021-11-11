@@ -1,18 +1,19 @@
 <script>
   import { onMount } from 'svelte';
-  import { gyms } from './store';
+  // import { gyms } from './store';
   import * as d3 from 'd3';
 
   import { getContrast, getRouteColor } from './modules/colorHelpers';
   import { gradeConverter } from './modules/gradeConverter';
-
   import { fetchGymData } from './modules/fetchGymData';
+  import { gradeSystem } from './store';
 
-  import GymSelect from './components/GymSelect.svelte';
   import RoutePreview from './components/RoutePreview.svelte';
   import Menu from './components/Menu.svelte';
 
   let showRouteData = false;
+
+  let d3climbs;
 
   let climbs = [];
   let gymSvg = '';
@@ -24,7 +25,6 @@
   let routesElement;
 
   let selectedGym = {};
-  // $: selectedGym, console.log('changed gym');
 
   let windowWidth = window.innerWidth;
   let windowHeight = window.innerHeight;
@@ -44,6 +44,22 @@
       },
     };
   }
+
+  gradeSystem.subscribe((value) => {
+    // rerender values
+    if (d3climbs) {
+      d3climbs
+        .selectAll('div')
+        .html((d) => {
+          // TODO update to be based on route type and gym grading
+          return gradeConverter(d.grade, value ? value : 'french_boulder');
+        })
+        .attr('style', (d) => getRouteColor(d.id, groups, true))
+        .style('color', (d) => getContrast(getRouteColor(d.id, groups, false)));
+    }
+  });
+
+  // TODO add popup to re center map if you are far out > disable panning clamp
 
   function mapSetup() {
     // console.log('map setup');
@@ -79,17 +95,13 @@
     // normalize floorplan translation and scale
     const bbox = svg.select('#zoom_layer').node().getBBox();
 
-    // routesElement = svg.select('#zoom_layer > .routes').node()
-    //   ? svg.select('#zoom_layer > .routes')
-    //   : svg.select('#zoom_layer').append('g').attr('class', 'routes');
-
     routesElement = svg
       .select('#zoom_layer')
       .attr('transform', `translate(${-bbox.x}, ${-bbox.y})`)
       .append('g')
       .attr('class', 'routes');
 
-    climbs = routesElement
+    d3climbs = routesElement
       .selectAll('foreignObject')
       .data(climbData)
       .enter()
@@ -122,11 +134,14 @@
       .attr('width', 40)
       .attr('height', 40);
 
-    climbs
+    d3climbs
       .append('xhtml:div')
       .html((d) => {
         // TODO update to be based on route type and gym grading
-        return gradeConverter(d.grade, 'french_boulder');
+        return gradeConverter(
+          d.grade,
+          $gradeSystem ? $gradeSystem : 'french_boulder'
+        );
       })
       .attr('style', (d) => getRouteColor(d.id, groups, true))
       .style('color', (d) => getContrast(getRouteColor(d.id, groups, false)));
@@ -197,7 +212,6 @@
     [climbs, groups, gymSvg] = await fetchGymData(8, 'bruut_boulder_breda');
 
     let frame;
-
     function loop() {
       frame = requestAnimationFrame(loop);
 
@@ -219,15 +233,20 @@
   on:changeGym={async (e) => {
     selectedGym = e.detail;
 
-    // console.log(e.detail);
+    // fetch grading system
+    const gymData = await fetch(
+      `https://api.toplogger.nu/v1/gyms/${e.detail.slug}`
+    );
+    let gymJson = await gymData.json();
+
+    $gradeSystem =
+      gymJson.grading_system_boulders || gymJson.grading_system_routes;
 
     // refetch routes
     [climbs, groups, gymSvg] = await fetchGymData(
       selectedGym.id,
       selectedGym.id_name
     );
-
-    console.log(climbs, groups);
   }}
 />
 

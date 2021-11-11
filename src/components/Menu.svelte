@@ -2,13 +2,13 @@
   import { createEventDispatcher } from 'svelte';
 
   import GymSelect from './GymSelect.svelte';
+  import GradeSelector from './GradeSelector.svelte';
 
-  // import { fetchGymData } from '../modules/fetchGymData';
   const dispatch = createEventDispatcher();
 
   let menuOpen = false;
 
-  export let selectedGym;
+  export let selected;
 </script>
 
 <header
@@ -47,10 +47,17 @@
   >
     <GymSelect
       on:change={(e) => {
-        selectedGym = e.detail;
+        selected = e.detail;
         // console.log(e.detail);
-
         dispatch('changeGym', e.detail);
+      }}
+    />
+
+    <GradeSelector
+      on:change={(e) => {
+        // selected = e.detail;
+        // console.log(e.detail);
+        // dispatch('changeGym', e.detail);
       }}
     />
   </div>

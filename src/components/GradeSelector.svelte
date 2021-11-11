@@ -5,13 +5,13 @@
   let selected;
 
   const gradeSystems = [
-    { name: 'same as gym', value: undefined },
-    { name: 'uiaa', value: 'uiaa' },
-    { name: 'yds', value: 'yds' },
+    { name: 'Same as gym', value: undefined },
+    { name: 'UIAA', value: 'uiaa' },
+    { name: 'YDS', value: 'yds' },
     { name: 'French', value: 'french' },
     { name: 'French boulder', value: 'french_boulder' },
     { name: 'French rounded', value: 'french_rounded' },
-    { name: 'ewbank', value: 'ewbank' },
+    { name: 'Ewbank', value: 'ewbank' },
     { name: 'British', value: 'british' },
     { name: 'V Grade', value: 'v_grade' },
   ];

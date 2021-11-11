@@ -254,5 +254,7 @@ const grades = {
 export function gradeConverter(value, to) {
   // grade value
   // to system to convert to
+
+  // TODO get closest grade if none is found
   return grades[to][Number(value)];
 }
