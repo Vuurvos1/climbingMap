@@ -1,8 +1,9 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { gradeSystem } from '../store';
+  import { gradeSystem } from '../stores';
 
   let selected;
+  const dispatch = createEventDispatcher();
 
   const gradeSystems = [
     { name: 'Same as gym', value: undefined },
@@ -15,8 +16,6 @@
     { name: 'British', value: 'british' },
     { name: 'V Grade', value: 'v_grade' },
   ];
-
-  const dispatch = createEventDispatcher();
 </script>
 
 <div class="p-4">

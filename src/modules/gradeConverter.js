@@ -251,10 +251,23 @@ const grades = {
   },
 };
 
+// convert grade value to different grading system
 export function gradeConverter(value, to) {
-  // grade value
-  // to system to convert to
+  // get closest grade if none is found
+  if (!grades[to][Number(value)]) {
+    // convert keys to numbers
+    const counts = Object.keys(grades[to]).map((i) => Number(i));
+    const goal = Number(value);
 
-  // TODO get closest grade if none is found
+    // convert grade rounded to nearest
+    // const closest = counts.reduce((prev, curr) => {
+    //   return Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev;
+    // });
+
+    // convert grade rounded down
+    const lower = Math.max(...counts.filter((num) => num <= goal));
+    return grades[to][lower];
+  }
+
   return grades[to][Number(value)];
 }

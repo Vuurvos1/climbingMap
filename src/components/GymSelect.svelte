@@ -1,19 +1,19 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { gyms } from '../store.js';
+  import { createEventDispatcher } from 'svelte';
+  import { gyms } from '../stores.js';
+  if ($gyms == null || Object.keys($gyms).length == 0) {
+    getGyms();
+  }
 
   let selected;
-
   const dispatch = createEventDispatcher();
 
-  onMount(async () => {
-    if (Object.keys($gyms).length == 0 || $gyms == null) {
-      console.log('fetching gyms');
-      const data = await fetch('https://api.toplogger.nu/v1/gyms/');
-      const json = await data.json();
-      gyms.set(json);
-    }
-  });
+  async function getGyms() {
+    const data = await fetch('https://api.toplogger.nu/v1/gyms/');
+    const json = await data.json();
+    gyms.set(json);
+    return json;
+  }
 </script>
 
 <div class="p-4">

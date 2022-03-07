@@ -6,7 +6,7 @@
   import { getContrast, getRouteColor } from './modules/colorHelpers';
   import { gradeConverter } from './modules/gradeConverter';
   import { fetchGymData } from './modules/fetchGymData';
-  import { gradeSystem } from './store';
+  import { gradeSystem } from './stores';
 
   import RoutePreview from './components/RoutePreview.svelte';
   import Menu from './components/Menu.svelte';
