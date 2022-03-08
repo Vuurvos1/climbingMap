@@ -1,11 +1,12 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { gyms } from '../stores.js';
+  import { gyms, gym as gymStore } from '../stores.js';
   if ($gyms == null || Object.keys($gyms).length == 0) {
     getGyms();
   }
 
-  let selected;
+  export let selected;
+
   const dispatch = createEventDispatcher();
 
   async function getGyms() {
@@ -25,10 +26,11 @@
     bind:value={selected}
     on:change={() => {
       // update data
+      gymStore.set(selected);
       dispatch('change', selected);
     }}
   >
-    {#if Object.keys($gyms).length != 0 && $gyms}
+    {#if $gyms && Object.keys($gyms).length != 0 && $gyms}
       {#each $gyms as gym}
         <option value={gym}>{gym.name}</option>
       {/each}

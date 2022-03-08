@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { gyms, gym } from '../stores';
 
   import GymSelect from './GymSelect.svelte';
   import GradeSelector from './GradeSelector.svelte';
@@ -8,7 +9,8 @@
 
   let menuOpen = false;
 
-  export let selected;
+  let selectedIndex = $gyms?.findIndex((x) => x?.id === $gym?.id);
+  let selected = selectedIndex > -1 ? $gyms[selectedIndex] : {};
 </script>
 
 <header
@@ -46,9 +48,8 @@
     class="menu fixed top-0 left-0 h-screen w-80 pt-12 bg-white shadow-lg"
   >
     <GymSelect
+      bind:selected
       on:change={(e) => {
-        selected = e.detail;
-        // console.log(e.detail);
         dispatch('changeGym', e.detail);
       }}
     />

@@ -9,7 +9,8 @@ gyms.subscribe((value) => {
   }
 });
 
-export const gym = writable({});
+// selected gym
+export const gym = writable(JSON.parse(localStorage.getItem('gym')));
 gym.subscribe((value) => {
   if (typeof value === 'object' && value != null) {
     localStorage.setItem('gym', JSON.stringify(value));
@@ -17,8 +18,6 @@ gym.subscribe((value) => {
 });
 
 export const gradeSystem = writable(undefined);
-
-// selected gym
 
 // TODO add stores for routes, svg and groups
 // export const map = svg

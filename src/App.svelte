@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  // import { gyms } from './store';
+  import { gym } from './stores';
   import * as d3 from 'd3';
 
   import { getContrast, getRouteColor } from './modules/colorHelpers';
@@ -24,7 +24,7 @@
 
   let routesElement;
 
-  let selectedGym = {};
+  let selectedGym = $gym?.id ? $gym : {};
 
   let windowWidth = window.innerWidth;
   let windowHeight = window.innerHeight;
@@ -209,7 +209,9 @@
 
   onMount(async () => {
     // fetch all data
-    [climbs, groups, gymSvg] = await fetchGymData(8, 'bruut_boulder_breda');
+    const selectedGym = $gym?.id_name ? $gym.id_name : 'bruut_boulder_breda';
+    const selectedId = $gym?.id ? $gym.id : 8;
+    [climbs, groups, gymSvg] = await fetchGymData(selectedId, selectedGym);
 
     let frame;
     function loop() {
@@ -230,23 +232,19 @@
 <svelte:window bind:innerHeight={windowHeight} bind:innerWidth={windowWidth} />
 
 <Menu
+  bind:selected={selectedGym}
   on:changeGym={async (e) => {
-    selectedGym = e.detail;
-
     // fetch grading system
     const gymData = await fetch(
       `https://api.toplogger.nu/v1/gyms/${e.detail.slug}`
     );
-    let gymJson = await gymData.json();
+    const gymJson = await gymData.json();
 
     $gradeSystem =
       gymJson.grading_system_boulders || gymJson.grading_system_routes;
 
     // refetch routes
-    [climbs, groups, gymSvg] = await fetchGymData(
-      selectedGym.id,
-      selectedGym.id_name
-    );
+    [climbs, groups, gymSvg] = await fetchGymData($gym.id, $gym.id_name);
   }}
 />
 
