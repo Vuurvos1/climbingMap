@@ -21,3 +21,10 @@ export const gradeSystem = writable(undefined);
 
 // TODO add stores for routes, svg and groups
 // export const map = svg
+
+// store map
+// store routes
+
+// store gyms
+
+// store checkmarked routes?

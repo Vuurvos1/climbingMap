@@ -66,7 +66,7 @@ export function getRouteColor(climb_id, groups, styleVar = false) {
     const cols = name.split('/');
 
     if (styleVar) {
-      return `--dot-col: linear-gradient(315deg, ${colors[cols[0]]} 50%, ${
+      return `linear-gradient(315deg, ${colors[cols[0]]} 50%, ${
         colors[cols[1]]
       } 50%)`;
     }
@@ -78,7 +78,7 @@ export function getRouteColor(climb_id, groups, styleVar = false) {
   const col = colors[name] ? colors[name] : '#0000ff';
 
   if (styleVar) {
-    return `--dot-col: ${col}`;
+    return col;
   }
 
   return col;

@@ -1,6 +1,6 @@
 <script>
-  import { onMount } from 'svelte';
-  import { gym } from './stores';
+  import { afterUpdate, onMount, tick } from 'svelte';
+  import { gym, gyms } from './stores';
   import * as d3 from 'd3';
 
   import { getContrast, getRouteColor } from './modules/colorHelpers';
@@ -10,6 +10,7 @@
 
   import RoutePreview from './components/RoutePreview.svelte';
   import Menu from './components/Menu.svelte';
+  import Map from './components/Map.svelte';
 
   let showRouteData = false;
 
@@ -18,7 +19,11 @@
   let climbs = [];
   let gymSvg = '';
   let groups;
-  let climb;
+  let selectedClimb;
+
+  let map;
+  let mapWidth;
+  let mapHeight;
 
   let dotScale = 1;
 
@@ -32,18 +37,83 @@
   $: windowWidth, mapSetup();
   $: windowHeight, mapSetup();
 
-  function svgFunc(node, svg) {
-    return {
-      update() {
-        d3ify(climbs, groups);
+  // $: gymSvg, d3ify(climbs, groups);
+  $: gymSvg, getMapWidth();
 
-        // this adds double routes > clear svg first?
-      },
-      destroy() {
-        // console.log('destroyed', node);
-      },
-    };
+  // $: {
+  //   console.log(mapWidth, windowWidth, windowWidth / mapWidth);
+  // }
+
+  $: {
+    const re = /<a[^>]*?href=(["\'])?((?:.(?!\1|>))*.?)\1?/gi;
+    // console.log(gymSvg);
+    // console.log(
+    //   gymSvg.match(/<svg[^>]*?width=(["\'])?((?:.(?!\1|>))*.?)\1?/gi)
+    // );
+
+    // if (map && gymSvg) {
+    //   const mapWrap = document.querySelector('#map svg');
+    //   console.log(mapWrap);
+    //   console.log(
+    //     mapWrap.getBoundingClientRect(),
+    //     mapWrap.offsetWidth,
+    //     mapWrap.clientHeight
+    //   );
+    // }
   }
+
+  $: {
+    if (gymSvg) {
+      const mapWrap = document.querySelector('#map svg');
+
+      if (mapWrap) {
+        // console.log(mapWrap.getBoundingClientRect());
+      }
+    }
+  }
+
+  async function getMapWidth() {
+    await tick();
+    const mapWrap = document.querySelector('#map');
+    const { width, height } = mapWrap.getBoundingClientRect();
+
+    // console.log(mapWrap, width, height);
+
+    mapWidth = width;
+    mapHeight = height;
+  }
+
+  afterUpdate(() => {
+    // console.log();
+
+    if (map && gymSvg) {
+      const mapWrap = document.querySelector('#map');
+      // console.log(mapWrap);
+      // console.log(
+      //   mapWrap.getBoundingClientRect(),
+      //   mapWrap.offsetWidth,
+      //   mapWrap.clientHeight
+      // );
+
+      const { width, height } = mapWrap.getBoundingClientRect();
+
+      // mapWidth = width;
+      // mapHeight = height;
+    }
+  });
+
+  // function svgFunc(node, svg) {
+  //   return {
+  //     update() {
+  //       d3ify(climbs, groups);
+
+  //       // this adds double routes > clear svg first?
+  //     },
+  //     destroy() {
+  //       // console.log('destroyed', node);
+  //     },
+  //   };
+  // }
 
   gradeSystem.subscribe((value) => {
     // rerender values
@@ -108,8 +178,10 @@
       .append('foreignObject')
       .on('click', (e, d) => {
         e.stopPropagation();
-        climb = d;
+        selectedClimb = d;
         showRouteData = true;
+
+        console.log('bbox', bbox.width, windowWidth);
 
         const scale = (bbox.width / windowWidth) * 0.75;
 
@@ -162,7 +234,8 @@
       .on('zoom', (e, d) => {
         zoomEl.attr('transform', e.transform);
 
-        // maybe scale the group that contains all climbs?
+        // console.log(e.transform.k); // this is basically the zoom level/scale
+
         dotScale = Math.round((1 / e.transform.k) * 100) / 100;
         // dotScale = 1 / e.transform.k;
         // routes.attr('style', `--dot-scale: ${1 / e.transform.k}`);
@@ -213,6 +286,12 @@
     const selectedId = $gym?.id ? $gym.id : 8;
     [climbs, groups, gymSvg] = await fetchGymData(selectedId, selectedGym);
 
+    // unwrap gym svg element
+    let parser = new DOMParser();
+    const doc = parser.parseFromString(gymSvg, 'text/html');
+    // console.log(doc, doc.querySelector('#zoom_layer').innerHTML);
+    gymSvg = doc.querySelector('#zoom_layer').innerHTML;
+
     let frame;
     function loop() {
       frame = requestAnimationFrame(loop);
@@ -249,13 +328,64 @@
 />
 
 <main>
-  <div class="svgContainer h-screen" use:svgFunc={gymSvg}>
+  <!-- <div class="svgContainer h-screen hidden" use:svgFunc={gymSvg}> -->
+  <div class="svgContainer h-screen hidden">
     {@html gymSvg}
+  </div>
+
+  <Map {climbs} {groups} mapSvg={gymSvg} />
+
+  <div>
+    <!-- <svg bind:this={map} width={mapWidth} height={mapHeight}>
+      <g class="map-zoom">
+        <g class="map-scale">
+          <g
+            class="map"
+            id="map"
+            temp="{mapWidth} {windowWidth}"
+            width={mapWidth}
+            height={mapHeight}
+            style:transform="scale({(mapWidth / windowWidth) * 0.75})"
+          > -->
+    <!-- map areas -->
+    <!-- {@html gymSvg}
+          </g>
+          <g class="routes" id="">
+            {#each climbs as climb}
+              <foreignObject
+                width="40"
+                height="40"
+                x={mapWidth * climb.position_x}
+                y={mapHeight * climb.position_y}
+                on:click|stopPropagation={() => {
+                  selectedClimb = climb;
+                  showRouteData = true;
+                }}
+              >
+                <div
+                  style={getRouteColor(climb.id, groups, true)}
+                  style:color={getContrast(
+                    getRouteColor(climb.id, groups, false)
+                  )}
+                  style:transform="scale({1})"
+                  style:background-color={getRouteColor(climb.id, groups, true)}
+                >
+                  {gradeConverter(
+                    climb.grade,
+                    $gradeSystem ? $gradeSystem : 'french_boulder'
+                  )}
+                </div>
+              </foreignObject>
+            {/each}
+          </g>
+        </g>
+      </g> -->
+    <!-- </svg> -->
   </div>
 
   {#if showRouteData}
     <RoutePreview
-      data={climb}
+      data={selectedClimb}
       on:click={() => {
         showRouteData = false;
       }}
