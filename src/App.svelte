@@ -282,6 +282,7 @@
   }
 
   onMount(async () => {
+    /*
     // fetch all data
     const selectedGym = $gym?.id_name ? $gym.id_name : 'bruut_boulder_breda';
     const selectedId = $gym?.id ? $gym.id : 8;
@@ -306,6 +307,7 @@
     loop();
 
     return () => cancelAnimationFrame(frame);
+    */
   });
 </script>
 
@@ -335,8 +337,12 @@
   </div>
 
   <Zoomer>
-    <Map {climbs} {groups} mapSvg={gymSvg} />
+    <!-- <Map {climbs} {groups} mapSvg={gymSvg} /> -->
+    <div class="testMap w-[1000px] h-[1000px]" />
   </Zoomer>
+
+  <!-- <div class="hidden" /> -->
+  <!-- <div class="testMap w-[1000px] h-[1000px]" /> -->
 
   <div>
     <!-- <svg bind:this={map} width={mapWidth} height={mapHeight}>
@@ -397,6 +403,20 @@
 </main>
 
 <style>
+  :global(body) {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  .testMap {
+    background-image: linear-gradient(45deg, #808080 25%, transparent 25%),
+      linear-gradient(-45deg, #808080 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #808080 75%),
+      linear-gradient(-45deg, transparent 75%, #808080 75%);
+    background-size: 50px 50px;
+    background-position: 0 0, 0 25px, 25px -25px, -25px 0px;
+  }
   .svgContainer {
     width: calc(100vw - (100vw - 100%));
   }

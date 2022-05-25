@@ -1,9 +1,18 @@
 <script>
+  import { spring } from 'svelte/motion';
+  import { writable } from 'svelte/store';
+
   export let disabled = false;
 
   let isPanning = false;
+
   let zoom = 1;
-  const zoomAmounts = [10, 5, 3, 2, 1, 0.5, 0.1];
+  // disable scroll snapping?
+  // const zoomAmounts = [20, 10, 5, 3, 2, 1, 0.5];
+  // const actualZoom = spring(zoomAmounts[zoom]);
+  // const actualZoom = spring(zoomAmounts[zoom]);
+  // $: actualZoom.set(zoomAmounts[zoom]);
+
   let x = 0;
   let y = 0;
   // panning
@@ -12,13 +21,13 @@
   let panDeltaX = 0;
   let panDeltaY = 0;
 
-  let scale = 1;
+  // let scale = 1;
 
   function onPanningStart(ev) {
     if (disabled) return;
 
-    ev.preventDefault();
-    ev.stopPropagation();
+    // ev.preventDefault();
+    // ev.stopPropagation();
 
     isPanning = true;
     initialPointerX = ev.clientX;
@@ -31,6 +40,7 @@
 
   function onPanning(ev) {
     if (!isPanning) return;
+    // TODO clamp these values
     panDeltaX = ev.clientX - initialPointerX;
     panDeltaY = ev.clientY - initialPointerY;
   }
@@ -45,11 +55,28 @@
   }
 
   function onWheel(ev) {
-    zoom += Math.sign(ev.deltaY);
-    if (zoom < 0) zoom = 0;
-    if (zoom >= zoomAmounts.length) {
-      zoom = zoomAmounts.length - 1;
-    }
+    let newZoom = Math.max(0.1, Math.min(zoom + ev.deltaY / 1000, 10));
+
+    const rect = ev.currentTarget.getBoundingClientRect();
+    const mouseX = (ev.clientX - rect.left) / zoom;
+    const mouseY = (ev.clientY - rect.top) / zoom;
+
+    console.log(mouseX, mouseY, zoom);
+    const scaleDifference = newZoom - zoom;
+
+    zoom = newZoom;
+    x -= mouseX * scaleDifference;
+    y -= mouseY * scaleDifference;
+
+    // let newZoom = zoom + ev.deltaY;
+    // if (newZoom < 0) zoom = 0;
+    // if (newZoom > 40) newZoom = 40;
+    // // if (newZoom >= zoomAmounts.length) newZoom = zoomAmounts.length - 1;
+    // const scaleDifference = ev.deltaY;
+    // console.log(scaleDifference);
+    // zoom = newZoom;
+    // x -= mouseX * scaleDifference;
+    // y -= mouseY * scaleDifference;
   }
 </script>
 
@@ -64,12 +91,11 @@
     // 'clear panning';
   }} /> -->
 
-<div class="wrapper" on:mousewheel={onWheel}>
+<div class="wrapper">
   <div
     class="content"
-    style:transform="translate3d({x + panDeltaX}px, {y + panDeltaY}px, 0) scale({zoomAmounts[
-      zoom
-    ]})"
+    on:mousewheel={onWheel}
+    style:transform="translate3d({x + panDeltaX}px, {y + panDeltaY}px, 0) scale({zoom})"
   >
     <slot />
   </div>
@@ -78,8 +104,10 @@
 <style>
   .wrapper {
     position: relative;
-    width: fit-content;
-    height: fit-content;
+    /* width: fit-content;
+    height: fit-content; */
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
     -moz-user-select: none;
     -webkit-user-select: none;
