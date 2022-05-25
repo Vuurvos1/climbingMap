@@ -17,7 +17,7 @@
 
   let d3climbs;
 
-  let climbs = [];
+  $: climbs = [];
   let gymSvg = '';
   let groups;
   let selectedClimb;
@@ -101,6 +101,8 @@
       // mapWidth = width;
       // mapHeight = height;
     }
+
+    // climbs = climbs;
   });
 
   // function svgFunc(node, svg) {
@@ -282,11 +284,12 @@
   }
 
   onMount(async () => {
-    /*
     // fetch all data
     const selectedGym = $gym?.id_name ? $gym.id_name : 'bruut_boulder_breda';
     const selectedId = $gym?.id ? $gym.id : 8;
     [climbs, groups, gymSvg] = await fetchGymData(selectedId, selectedGym);
+    console.log(climbs);
+    // climbs = climbs;
 
     // unwrap gym svg element
     let parser = new DOMParser();
@@ -307,7 +310,6 @@
     loop();
 
     return () => cancelAnimationFrame(frame);
-    */
   });
 </script>
 
@@ -336,10 +338,14 @@
     {@html gymSvg}
   </div>
 
-  <Zoomer>
-    <!-- <Map {climbs} {groups} mapSvg={gymSvg} /> -->
-    <div class="testMap w-[1000px] h-[1000px]" />
-  </Zoomer>
+  <div class="w-screen h-screen">
+    <Zoomer>
+      <div class="w-screen h-screen flex justify-center align-middle">
+        <Map {climbs} {groups} mapSvg={gymSvg} />
+        <!-- <div class="testMap w-[1000px] h-[1000px]" /> -->
+      </div>
+    </Zoomer>
+  </div>
 
   <!-- <div class="hidden" /> -->
   <!-- <div class="testMap w-[1000px] h-[1000px]" /> -->

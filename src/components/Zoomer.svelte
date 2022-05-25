@@ -1,6 +1,5 @@
 <script>
-  import { spring } from 'svelte/motion';
-  import { writable } from 'svelte/store';
+  import { zoomLevel } from '../stores';
 
   export let disabled = false;
 
@@ -21,10 +20,13 @@
   let panDeltaX = 0;
   let panDeltaY = 0;
 
-  // let scale = 1;
+  function isPanningStartAllowed(ev) {
+    return ev.button === 0;
+  }
 
   function onPanningStart(ev) {
     if (disabled) return;
+    if (!isPanningStartAllowed(ev)) return;
 
     // ev.preventDefault();
     // ev.stopPropagation();
@@ -34,8 +36,6 @@
     initialPointerY = ev.clientY;
     panDeltaX = 0;
     panDeltaY = 0;
-
-    console.log('onPanningStart');
   }
 
   function onPanning(ev) {
@@ -46,7 +46,6 @@
   }
 
   function onPanningStop(ev) {
-    console.log('onPanningStop');
     isPanning = false;
     x += panDeltaX;
     y += panDeltaY;
@@ -55,16 +54,16 @@
   }
 
   function onWheel(ev) {
-    let newZoom = Math.max(0.1, Math.min(zoom + ev.deltaY / 1000, 10));
+    let newZoom = Math.max(0.1, Math.min(zoom + -ev.deltaY / 1000, 10));
 
     const rect = ev.currentTarget.getBoundingClientRect();
     const mouseX = (ev.clientX - rect.left) / zoom;
     const mouseY = (ev.clientY - rect.top) / zoom;
 
-    console.log(mouseX, mouseY, zoom);
     const scaleDifference = newZoom - zoom;
 
     zoom = newZoom;
+    $zoomLevel = zoom;
     x -= mouseX * scaleDifference;
     y -= mouseY * scaleDifference;
 
@@ -74,9 +73,6 @@
     // // if (newZoom >= zoomAmounts.length) newZoom = zoomAmounts.length - 1;
     // const scaleDifference = ev.deltaY;
     // console.log(scaleDifference);
-    // zoom = newZoom;
-    // x -= mouseX * scaleDifference;
-    // y -= mouseY * scaleDifference;
   }
 </script>
 
@@ -85,6 +81,9 @@
   on:pointermove={onPanning}
   on:pointerup={onPanningStop}
 />
+<!-- on:touchstart={onPanningStart} -->
+<!-- on:touchmove={onPanning} -->
+<!-- on:touchend={onPanningStop} -->
 
 <!-- <svelte:body
   on:mouseleave={() => {
@@ -93,7 +92,7 @@
 
 <div class="wrapper">
   <div
-    class="content"
+    class="flex flex-wrap w-fit h-fit p-0 m-0 origin-top-left"
     on:mousewheel={onWheel}
     style:transform="translate3d({x + panDeltaX}px, {y + panDeltaY}px, 0) scale({zoom})"
   >
@@ -104,10 +103,10 @@
 <style>
   .wrapper {
     position: relative;
-    /* width: fit-content;
-    height: fit-content; */
-    width: 100vw;
-    height: 100vh;
+    width: fit-content;
+    height: fit-content;
+    /* width: 100vw;
+    height: 100vh; */
     overflow: hidden;
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -115,15 +114,5 @@
     user-select: none;
     margin: 0;
     padding: 0;
-  }
-
-  .content {
-    display: flex;
-    flex-wrap: wrap;
-    width: fit-content;
-    height: fit-content;
-    margin: 0;
-    padding: 0;
-    transform-origin: 0% 0%;
   }
 </style>

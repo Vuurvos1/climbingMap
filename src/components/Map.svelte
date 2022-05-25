@@ -4,13 +4,13 @@
   import { getContrast, getRouteColor } from '../modules/colorHelpers';
   import { gradeConverter } from '../modules/gradeConverter';
 
-  import { gradeSystem } from '../stores';
+  import { gradeSystem, zoomLevel } from '../stores';
 
   export let climbs = [];
   export let groups = [];
   export let mapSvg;
 
-  let showRoutes = false;
+  let showRoutes = true;
 
   let map;
   let svgMap;
@@ -81,8 +81,6 @@
       mapWidth = width;
       mapHeight = height;
     }
-
-    // console.log(mapWrap, width, height);
   });
 </script>
 
@@ -120,7 +118,7 @@
                   style:color={getContrast(
                     getRouteColor(climb.id, groups, false)
                   )}
-                  style:transform="scale({1})"
+                  style:transform="scale({$zoomLevel})"
                   style:background-color={getRouteColor(climb.id, groups, true)}
                 >
                   {gradeConverter(
@@ -183,7 +181,7 @@
     </g>
   </g>
 </svg> -->
-<style lang="scss">
+<style>
   svg > * {
     overflow: visible;
   }

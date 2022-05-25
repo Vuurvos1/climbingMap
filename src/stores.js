@@ -28,3 +28,5 @@ export const gradeSystem = writable(undefined);
 // store gyms
 
 // store checkmarked routes?
+
+export const zoomLevel = writable(1);
