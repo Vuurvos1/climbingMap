@@ -11,6 +11,7 @@
   import RoutePreview from './components/RoutePreview.svelte';
   import Menu from './components/Menu.svelte';
   import Map from './components/Map.svelte';
+  import Zoomer from './components/Zoomer.svelte';
 
   let showRouteData = false;
 
@@ -333,7 +334,9 @@
     {@html gymSvg}
   </div>
 
-  <Map {climbs} {groups} mapSvg={gymSvg} />
+  <Zoomer>
+    <Map {climbs} {groups} mapSvg={gymSvg} />
+  </Zoomer>
 
   <div>
     <!-- <svg bind:this={map} width={mapWidth} height={mapHeight}>

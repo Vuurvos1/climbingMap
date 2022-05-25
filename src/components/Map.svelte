@@ -37,7 +37,7 @@
       // console.log(svgMap, svgMap.getBBox(), svgMap.getBoundingClientRect());
       // const { width, height } = svgMap.getBoundingClientRect();
       const bbox = svgMap.getBBox();
-      console.log(svgMap.getBBox());
+      // console.log(svgMap.getBBox());
 
       //setup zoom and initial zoom
       const baseScale = (windowHeight / bbox.height) * 0.9;
