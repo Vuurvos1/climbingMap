@@ -6,11 +6,6 @@
   let isPanning = false;
 
   let zoom = 1;
-  // disable scroll snapping?
-  // const zoomAmounts = [20, 10, 5, 3, 2, 1, 0.5];
-  // const actualZoom = spring(zoomAmounts[zoom]);
-  // const actualZoom = spring(zoomAmounts[zoom]);
-  // $: actualZoom.set(zoomAmounts[zoom]);
 
   let x = 0;
   let y = 0;
@@ -19,6 +14,11 @@
   let initialPointerY = 0;
   let panDeltaX = 0;
   let panDeltaY = 0;
+
+  let innerHeight;
+  let innerWidth;
+
+  let innerWrap;
 
   function isPanningStartAllowed(ev) {
     return ev.button === 0;
@@ -56,7 +56,7 @@
   function onWheel(ev) {
     let newZoom = Math.max(0.1, Math.min(zoom + -ev.deltaY / 1000, 10));
 
-    const rect = ev.currentTarget.getBoundingClientRect();
+    const rect = innerWrap.getBoundingClientRect();
     const mouseX = (ev.clientX - rect.left) / zoom;
     const mouseY = (ev.clientY - rect.top) / zoom;
 
@@ -66,13 +66,18 @@
     $zoomLevel = zoom;
     x -= mouseX * scaleDifference;
     y -= mouseY * scaleDifference;
+  }
 
-    // let newZoom = zoom + ev.deltaY;
-    // if (newZoom < 0) zoom = 0;
-    // if (newZoom > 40) newZoom = 40;
-    // // if (newZoom >= zoomAmounts.length) newZoom = zoomAmounts.length - 1;
-    // const scaleDifference = ev.deltaY;
-    // console.log(scaleDifference);
+  function onTouchStart(ev) {
+    onPanningStart(ev.touches[0]);
+  }
+
+  function onTouchMove(ev) {
+    onPanning(ev.touches[0]);
+  }
+
+  function onTouchStop(ev) {
+    onPanningStop(ev.touches[0]);
   }
 </script>
 
@@ -80,20 +85,18 @@
   on:pointerdown={onPanningStart}
   on:pointermove={onPanning}
   on:pointerup={onPanningStop}
+  on:mousewheel={onWheel}
+  on:touchstart={onTouchStart}
+  on:touchmove={onTouchMove}
+  on:touchend={onTouchStop}
+  bind:innerHeight
+  bind:innerWidth
 />
-<!-- on:touchstart={onPanningStart} -->
-<!-- on:touchmove={onPanning} -->
-<!-- on:touchend={onPanningStop} -->
-
-<!-- <svelte:body
-  on:mouseleave={() => {
-    // 'clear panning';
-  }} /> -->
 
 <div class="wrapper">
   <div
+    bind:this={innerWrap}
     class="flex flex-wrap w-fit h-fit p-0 m-0 origin-top-left"
-    on:mousewheel={onWheel}
     style:transform="translate3d({x + panDeltaX}px, {y + panDeltaY}px, 0) scale({zoom})"
   >
     <slot />

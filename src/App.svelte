@@ -6,27 +6,24 @@
   import { getContrast, getRouteColor } from './modules/colorHelpers';
   import { gradeConverter } from './modules/gradeConverter';
   import { fetchGymData } from './modules/fetchGymData';
-  import { gradeSystem } from './stores';
+  import { gradeSystem, showRouteData } from './stores';
 
   import RoutePreview from './components/RoutePreview.svelte';
   import Menu from './components/Menu.svelte';
   import Map from './components/Map.svelte';
   import Zoomer from './components/Zoomer.svelte';
 
-  let showRouteData = false;
-
   let d3climbs;
 
   $: climbs = [];
-  let gymSvg = '';
+  let gymSvg = ''; // rename to mapSvg / floorplanSvg / svgMap
   let groups;
-  let selectedClimb;
 
   let map;
   let mapWidth;
   let mapHeight;
 
-  let dotScale = 1;
+  // let dotScale = 1;
 
   let routesElement;
 
@@ -237,7 +234,7 @@
       .on('zoom', (e, d) => {
         zoomEl.attr('transform', e.transform);
 
-        // console.log(e.transform.k); // this is basically the zoom level/scale
+        // console.log(e.transform.k); // this is basically the zoom level
 
         dotScale = Math.round((1 / e.transform.k) * 100) / 100;
         // dotScale = 1 / e.transform.k;
@@ -288,28 +285,12 @@
     const selectedGym = $gym?.id_name ? $gym.id_name : 'bruut_boulder_breda';
     const selectedId = $gym?.id ? $gym.id : 8;
     [climbs, groups, gymSvg] = await fetchGymData(selectedId, selectedGym);
-    console.log(climbs);
-    // climbs = climbs;
 
+    // TODO every time gym is switched
     // unwrap gym svg element
-    let parser = new DOMParser();
+    const parser = new DOMParser();
     const doc = parser.parseFromString(gymSvg, 'text/html');
-    // console.log(doc, doc.querySelector('#zoom_layer').innerHTML);
     gymSvg = doc.querySelector('#zoom_layer').innerHTML;
-
-    let frame;
-    function loop() {
-      frame = requestAnimationFrame(loop);
-
-      // logic
-      if (routesElement) {
-        routesElement.attr('style', `--dot-scale: ${dotScale}`);
-      }
-    }
-
-    loop();
-
-    return () => cancelAnimationFrame(frame);
   });
 </script>
 
@@ -338,17 +319,14 @@
     {@html gymSvg}
   </div>
 
-  <div class="w-screen h-screen">
-    <Zoomer>
+  <Zoomer>
+    <div class="w-screen h-screen">
       <div class="w-screen h-screen flex justify-center align-middle">
         <Map {climbs} {groups} mapSvg={gymSvg} />
         <!-- <div class="testMap w-[1000px] h-[1000px]" /> -->
       </div>
-    </Zoomer>
-  </div>
-
-  <!-- <div class="hidden" /> -->
-  <!-- <div class="testMap w-[1000px] h-[1000px]" /> -->
+    </div>
+  </Zoomer>
 
   <div>
     <!-- <svg bind:this={map} width={mapWidth} height={mapHeight}>
@@ -398,17 +376,17 @@
     <!-- </svg> -->
   </div>
 
-  {#if showRouteData}
-    <RoutePreview
-      data={selectedClimb}
-      on:click={() => {
-        showRouteData = false;
-      }}
-    />
+  {#if $showRouteData}
+    <RoutePreview />
   {/if}
 </main>
 
 <style>
+  main {
+    width: 100vw;
+    height: 100vh;
+  }
+
   :global(body) {
     height: 100vh;
     max-height: 100vh;
@@ -423,37 +401,16 @@
     background-size: 50px 50px;
     background-position: 0 0, 0 25px, 25px -25px, -25px 0px;
   }
-  .svgContainer {
+
+  /* .svgContainer {
     width: calc(100vw - (100vw - 100%));
-  }
+  } */
 
-  :global(.routes foreignObject) {
-    overflow: visible;
-    cursor: pointer;
-  }
-
-  :global(.routes div) {
-    width: 40px;
-    height: 40px;
-    background: var(--dot-col);
-    position: relative;
-
-    border-radius: 5rem;
-
-    text-align: center;
-    vertical-align: middle;
-    line-height: 38px;
-
-    box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.35);
-
-    transform: scale(var(--dot-scale));
-  }
-
-  :global(.white) {
+  /* :global(.white) {
     fill: var(--white);
   }
 
   :global(.black) {
     fill: var(--black);
-  }
+  } */
 </style>

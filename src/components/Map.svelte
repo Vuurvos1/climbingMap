@@ -4,7 +4,12 @@
   import { getContrast, getRouteColor } from '../modules/colorHelpers';
   import { gradeConverter } from '../modules/gradeConverter';
 
-  import { gradeSystem, zoomLevel } from '../stores';
+  import {
+    gradeSystem,
+    zoomLevel,
+    selectedClimb,
+    showRouteData,
+  } from '../stores';
 
   export let climbs = [];
   export let groups = [];
@@ -14,8 +19,6 @@
 
   let map;
   let svgMap;
-  let selectedClimb;
-  let showRouteData;
 
   let mapWidth = 0;
   let mapHeight = 0;
@@ -26,8 +29,6 @@
 
   $: windowWidth = 0;
   $: windowHeight = 0;
-
-  // $: mapSvg, console.log('aaaa');
 
   $: mapSvg, func();
 
@@ -89,49 +90,49 @@
 <div>
   <!-- <svg width={mapWidth} height={mapHeight}> -->
   <svg width={windowWidth} height={windowHeight}>
-    <g
+    <!-- <g
       class="map-translate"
       style:transform="translate({x}px, {y}px) scale({scale})"
-    >
-      <g class="map-scale">
-        <g class="map" id="map" bind:this={svgMap}>
-          <!-- width={mapWidth}
+    > -->
+    <g class="map-scale">
+      <g class="map" id="map" bind:this={svgMap}>
+        <!-- width={mapWidth}
           height={mapHeight} -->
-          <!-- style:transform="scale({scale})" -->
-          <!-- style:transform="scale({(windowWidth / mapWidth) * 0.75})" -->
-          {@html mapSvg}
-        </g>
-        <g class="routes">
-          {#if showRoutes}
-            {#each climbs as climb}
-              <foreignObject
-                width="40"
-                height="40"
-                x={mapWidth * climb.position_x}
-                y={mapHeight * climb.position_y}
-                on:click|stopPropagation={() => {
-                  selectedClimb = climb;
-                  showRouteData = true;
-                }}
+        <!-- style:transform="scale({scale})" -->
+        <!-- style:transform="scale({(windowWidth / mapWidth) * 0.75})" -->
+        {@html mapSvg}
+      </g>
+      <g class="routes">
+        {#if showRoutes}
+          {#each climbs as climb}
+            <foreignObject
+              width="40"
+              height="40"
+              x={mapWidth * climb.position_x}
+              y={mapHeight * climb.position_y}
+              on:click|stopPropagation={() => {
+                $selectedClimb = climb;
+                $showRouteData = true;
+              }}
+            >
+              <div
+                style:color={getContrast(
+                  getRouteColor(climb.id, groups, false)
+                )}
+                style:transform="scale({(1 / $zoomLevel) * 1})"
+                style:background-color={getRouteColor(climb.id, groups, true)}
               >
-                <div
-                  style:color={getContrast(
-                    getRouteColor(climb.id, groups, false)
-                  )}
-                  style:transform="scale({$zoomLevel})"
-                  style:background-color={getRouteColor(climb.id, groups, true)}
-                >
-                  {gradeConverter(
-                    climb.grade,
-                    $gradeSystem ? $gradeSystem : 'french_boulder'
-                  )}
-                </div>
-              </foreignObject>
-            {/each}
-          {/if}
-        </g>
+                {gradeConverter(
+                  climb.grade,
+                  $gradeSystem ? $gradeSystem : 'french_boulder'
+                )}
+              </div>
+            </foreignObject>
+          {/each}
+        {/if}
       </g>
     </g>
+    <!-- </g> -->
   </svg>
 </div>
 
@@ -182,7 +183,29 @@
   </g>
 </svg> -->
 <style>
-  svg > * {
+  svg {
     overflow: visible;
+  }
+
+  .routes foreignObject {
+    overflow: visible;
+    cursor: pointer;
+  }
+
+  .routes div {
+    width: 40px;
+    height: 40px;
+    background: var(--dot-col);
+    position: relative;
+
+    border-radius: 5rem;
+
+    text-align: center;
+    vertical-align: middle;
+    line-height: 38px;
+
+    box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.35);
+
+    transform: scale(var(--dot-scale));
   }
 </style>
