@@ -9,6 +9,7 @@
 
   let x = 0;
   let y = 0;
+
   // panning
   let initialPointerX = 0;
   let initialPointerY = 0;
@@ -19,6 +20,8 @@
   let innerWidth;
 
   let innerWrap;
+
+  export let scaleExtent = [0, Infinity];
 
   function isPanningStartAllowed(ev) {
     return ev.button === 0;
@@ -40,7 +43,7 @@
 
   function onPanning(ev) {
     if (!isPanning) return;
-    // TODO clamp these values
+    // TODO option to clamp these values
     panDeltaX = ev.clientX - initialPointerX;
     panDeltaY = ev.clientY - initialPointerY;
   }
@@ -54,7 +57,10 @@
   }
 
   function onWheel(ev) {
-    let newZoom = Math.max(0.1, Math.min(zoom + -ev.deltaY / 1000, 10));
+    let newZoom = Math.max(
+      scaleExtent[0],
+      Math.min(scaleExtent[1], zoom * Math.pow(2, -ev.deltaY / 500))
+    );
 
     const rect = innerWrap.getBoundingClientRect();
     const mouseX = (ev.clientX - rect.left) / zoom;
@@ -81,7 +87,10 @@
   }
 </script>
 
-<svelte:window
+<svelte:window bind:innerHeight bind:innerWidth />
+
+<div
+  class="wrapper"
   on:pointerdown={onPanningStart}
   on:pointermove={onPanning}
   on:pointerup={onPanningStop}
@@ -89,11 +98,7 @@
   on:touchstart={onTouchStart}
   on:touchmove={onTouchMove}
   on:touchend={onTouchStop}
-  bind:innerHeight
-  bind:innerWidth
-/>
-
-<div class="wrapper">
+>
   <div
     bind:this={innerWrap}
     class="flex flex-wrap w-fit h-fit p-0 m-0 origin-top-left"
