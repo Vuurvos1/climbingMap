@@ -1,33 +1,24 @@
 <script>
   import { onMount, tick } from 'svelte';
 
-  import { getContrast, getRouteColor } from '../modules/colorHelpers';
-  import { gradeConverter } from '../modules/gradeConverter';
-
-  import { gradeSystem } from '../stores';
+  import RouteDot from './RouteDot.svelte';
 
   export let climbs = [];
   export let groups = [];
   export let mapSvg;
 
-  let showRoutes = false;
+  let showRoutes = true;
 
   let map;
   let svgMap;
-  let selectedClimb;
-  let showRouteData;
 
   let mapWidth = 0;
   let mapHeight = 0;
 
-  let x = 0;
-  let y = 0;
   let scale = 1;
 
   $: windowWidth = 0;
   $: windowHeight = 0;
-
-  // $: mapSvg, console.log('aaaa');
 
   $: mapSvg, func();
 
@@ -81,8 +72,6 @@
       mapWidth = width;
       mapHeight = height;
     }
-
-    // console.log(mapWrap, width, height);
   });
 </script>
 
@@ -90,49 +79,26 @@
 
 <div>
   <!-- <svg width={mapWidth} height={mapHeight}> -->
-  <svg width={windowWidth} height={windowHeight}>
-    <g
-      class="map-translate"
-      style:transform="translate({x}px, {y}px) scale({scale})"
-    >
-      <g class="map-scale">
-        <g class="map" id="map" bind:this={svgMap}>
-          <!-- width={mapWidth}
-          height={mapHeight} -->
-          <!-- style:transform="scale({scale})" -->
-          <!-- style:transform="scale({(windowWidth / mapWidth) * 0.75})" -->
-          {@html mapSvg}
-        </g>
-        <g class="routes">
-          {#if showRoutes}
-            {#each climbs as climb}
-              <foreignObject
-                width="40"
-                height="40"
-                x={mapWidth * climb.position_x}
-                y={mapHeight * climb.position_y}
-                on:click|stopPropagation={() => {
-                  selectedClimb = climb;
-                  showRouteData = true;
-                }}
-              >
-                <div
-                  style:color={getContrast(
-                    getRouteColor(climb.id, groups, false)
-                  )}
-                  style:transform="scale({1})"
-                  style:background-color={getRouteColor(climb.id, groups, true)}
-                >
-                  {gradeConverter(
-                    climb.grade,
-                    $gradeSystem ? $gradeSystem : 'french_boulder'
-                  )}
-                </div>
-              </foreignObject>
-            {/each}
-          {/if}
-        </g>
-      </g>
+  <svg width={windowWidth} height={windowHeight} class="overflow-visible">
+    <g class="map" id="map" bind:this={svgMap}>
+      <!-- style:transform="scale({scale})" -->
+      <!-- style:transform="scale({(windowWidth / mapWidth) * 0.75})" -->
+      {@html mapSvg}
+    </g>
+    <g class="routes">
+      {#if showRoutes}
+        {#each climbs as climb}
+          <RouteDot
+            x={mapWidth * climb.position_x}
+            y={mapHeight * climb.position_y}
+            {climb}
+            {groups}
+          />
+        {/each}
+      {/if}
+    </g>
+    <g class="areaLabels">
+      <!-- map area labels -->
     </g>
   </svg>
 </div>
@@ -183,8 +149,5 @@
     </g>
   </g>
 </svg> -->
-<style lang="scss">
-  svg > * {
-    overflow: visible;
-  }
+<style>
 </style>
